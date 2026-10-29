@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import type { Card, StageState, StageKey, StageSlot, Phase, MoveMode, CardToastData, ComboRevealData } from '@/types/game'
 import { PHASES, isPhaseOk } from '@/lib/data'
 import {
-  applyAction, createGame, playBotPhase, MAX_ACTIONS,
-  type Action, type GameEvent, type GameState as EngineState, type PlayerId,
+  applyAction, createGame, playBotPhase, actionCap, rulesOf,
+  type Action, type GameEvent, type GameState as EngineState, type PlayerId, type Mode, type ShopRules,
 } from '@/lib/engine'
 import { Sound } from '@/lib/sound'
 
@@ -44,6 +44,13 @@ export interface GameState {
   unlockedStages: Record<StageKey, boolean>
   mustDiscard: number; actionsLeft: number; maxActions: number
   mulliganUsed: boolean; gameOver: boolean
+  mode: Mode
+  roundWins: [number, number]
+  lastRoundWinner: PlayerId | 'draw' | null
+  winner: PlayerId | 'draw' | null
+  playerRoundScore: number; aiRoundScore: number
+  extraActionsBought: number
+  shop: ShopRules | null
   // UI only
   selectedCard: number | null; targetMode: boolean
   focusedStage: StageKey
@@ -58,10 +65,12 @@ export interface GameState {
 }
 
 export interface GameActions {
-  startGame(playerGenre: string, playerSubGenre: string, aiGenre: string): void
+  startGame(playerGenre: string, playerSubGenre: string, aiGenre: string, mode: Mode): void
   restartGame(): void
   showTut(): void; tutNav(dir: 1 | -1): void
   nextPhase(): void
+  buyAction(): void; buyDraw(): void
+  boost(sk: StageKey): void; upgrade(sk: StageKey, kind: 'threshold' | 'mult'): void
   selectCard(idx: number): void
   slotClick(sk: StageKey, sl: StageSlot): void
   pickup(sk: StageKey, sl: StageSlot): void
@@ -86,8 +95,9 @@ const INITIAL: GameState = {
   aiDeck: [], aiHand: [], aiTrash: [], aiStages: emptyStages(),
   aiWallet: 0, aiBestRound: 0,
   unlockedStages: { s1: true, s2: false, s3: false },
-  mustDiscard: 0, actionsLeft: MAX_ACTIONS, maxActions: MAX_ACTIONS,
+  mustDiscard: 0, actionsLeft: 3, maxActions: 3,
   mulliganUsed: false, gameOver: false,
+  mode: 'short', roundWins: [0, 0], lastRoundWinner: null, winner: null, playerRoundScore: 0, aiRoundScore: 0, extraActionsBought: 0, shop: null,
   selectedCard: null, targetMode: false, focusedStage: 's1',
   moveMode: null, discovered: {},
   commentary: '"Systems online. 77-node register locked."', logEntries: [],
@@ -108,8 +118,11 @@ function project(g: EngineState): Partial<GameState> {
     aiDeck: ai.deck, aiHand: ai.hand, aiTrash: ai.trash, aiStages: ai.stages,
     aiWallet: ai.wallet, aiBestRound: ai.bestRound,
     unlockedStages: me.unlocked,
-    mustDiscard: me.mustDiscard, actionsLeft: me.actionsLeft, maxActions: MAX_ACTIONS,
+    mustDiscard: me.mustDiscard, actionsLeft: me.actionsLeft, maxActions: actionCap(g, me),
     mulliganUsed: me.mulliganUsed, gameOver: g.gameOver,
+    mode: g.mode, roundWins: g.roundWins, lastRoundWinner: g.lastRoundWinner, winner: g.winner,
+    playerRoundScore: me.lastRoundScore, aiRoundScore: ai.lastRoundScore,
+    extraActionsBought: me.extraActionsBought, shop: rulesOf(g).shop,
   }
 }
 
@@ -196,6 +209,21 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
         if (ev.gameOver) { if (ev.winner === ME) Sound.win(); else Sound.lose() }
         break
       }
+      case 'bought':
+        if (mine) { Sound.click(); log(ev.what === 'action' ? '💸 Bought an extra action' : '💸 Bought 2 cards') }
+        else log(ev.what === 'action' ? '💸 AI bought an extra action' : '💸 AI bought 2 cards')
+        break
+      case 'boosted':
+        if (mine) { Sound.place(); log(`🔊 Boost +${ev.amount}k on ${label(ev.sk)}`) }
+        else log(`🔊 AI boosted its ${label(ev.sk)} (+${ev.amount}k)`)
+        break
+      case 'upgraded':
+        if (mine) { Sound.combo(); log(`⬆ ${label(ev.sk)} upgraded: ${ev.kind === 'threshold' ? 'needs 1k fewer fans' : 'multiplier +1'}`) }
+        else log(`⬆ AI upgraded its ${label(ev.sk)}`)
+        break
+      case 'roundWon':
+        log(ev.winner === 'draw' ? '🏁 Round drawn — nobody scores it' : ev.winner === ME ? `🏁 You win the round (${ev.roundWins[0]}–${ev.roundWins[1]})` : `🏁 AI wins the round (${ev.roundWins[0]}–${ev.roundWins[1]})`)
+        break
       case 'mulligan':
         if (mine) log('🔀 Mulligan! Hand reshuffled.')
         break
@@ -245,12 +273,12 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       set(s => ({ tutStep: Math.max(1, Math.min(4, s.tutStep + dir)) }))
     },
 
-    startGame(playerGenre, playerSubGenre, aiGenre) {
+    startGame(playerGenre, playerSubGenre, aiGenre, mode) {
       Sound.unlock()
       const { state } = createGame([
         { name: 'YOU', genre: playerGenre, subGenre: playerSubGenre },
         { name: 'AI', genre: aiGenre },
-      ])
+      ], Date.now(), mode)
       set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: false, showTutorial: false, logEntries: [] })
       set(project(state))
       log('▶ Game started! Arrangement phase — place your Stages first.')
@@ -274,6 +302,11 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       }
       commit(state, events)
     },
+
+    buyAction() { dispatch({ type: 'buyAction' }) },
+    buyDraw() { dispatch({ type: 'buyDraw' }) },
+    boost(sk) { dispatch({ type: 'boost', sk }) },
+    upgrade(sk, kind) { dispatch({ type: 'upgrade', sk, kind }) },
 
     selectCard(idx) {
       const { playerHand, phaseIdx, mustDiscard, focusedStage } = get()
