@@ -27,7 +27,7 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
     st.setFocus(sk)
   }
   const name = owner === 'me' ? sk.toUpperCase() : `AI ${sk.toUpperCase()}`
-  const score = s.threshold > 0 ? `${s.current.toFixed(1)}k / ${s.threshold.toFixed(1)}k${passes ? ' ✓' : ''}${s.boost > 0 ? ` (+${s.boost}k boost)` : ''}`
+  const score = s.threshold > 0 ? `${s.current.toFixed(1)}k / ${s.threshold.toFixed(1)}k${passes ? ' ✓' : ''}${s.bonus > 0 ? ` (+${s.bonus}k bonus)` : ''}${s.boost > 0 ? ` (+${s.boost}k boost)` : ''}`
     : locked ? 'Opens in round 2' : owner === 'me' ? 'Drop a STAGE here' : 'Empty'
   const headLabel = owner === 'ai'
     ? (target ? `Attack ${name}` : `${name}, ${score}`)
@@ -40,7 +40,8 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
       <button type="button" className="zone-head" aria-label={headLabel} aria-pressed={owner === 'me' ? focused : undefined}
         disabled={locked || (owner === 'ai' && !target)} onClick={e => { e.stopPropagation(); activate() }}>
         <span className="zone-label">{name}{focused ? ' · FOCUS' : ''}</span>
-        {(s.protected || s.decoy) && <span className="zone-shield">{s.protected ? 'SHIELD' : 'DECOY'}</span>}
+        {s.protected && <span className="zone-shield">SHIELD</span>}
+        {owner === 'me' && s.decoy && !s.protected && <span className="zone-shield zone-decoy">DECOY</span>}
         <span className="zone-score num">{score}</span>
       </button>
       <div className="zone-cards">
@@ -49,6 +50,11 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
             moving={!!st.moveMode && st.moveMode.sk === sk && st.moveMode.sl === sl} />
         ))}
       </div>
+      {s.stage && (
+        <div className="zone-cap">
+          Artists {[s.artist1, s.artist2, s.artist3].filter(Boolean).length}/3 · Tracks {[s.track, s.track2, s.track3].filter(Boolean).length}/{s.stage.maxTracks ?? 1} · HW {s.hardware ? '✓' : '—'} · Bonus {s.guest ? '✓' : '—'}
+        </div>
+      )}
       {s.combos.length > 0 && <div className="zone-combos">⚡ {s.combos.map(c => c.name).join(' + ')}</div>}
       {owner === 'me' && st.shop && s.stage && <ZoneShop sk={sk} s={s} />}
     </div>
