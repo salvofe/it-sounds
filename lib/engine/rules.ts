@@ -119,20 +119,20 @@ function bonusProblem(card: Card, s: StageState): string | null {
 
 export function scoreStage(s: StageState, genre: string, activeStages: number): StageState {
   if (!s.stage) return { ...s, current: 0, threshold: 0, bonus: 0, combos: [] }
-  const threshold = s.stage.threshold ?? 0
+  const threshold = parseFloat(((s.stage.threshold ?? 0) - s.thresholdCut).toFixed(2))
   const arts = artists(s)
   const trks = tracks(s)
-  if (!arts.length || !trks.length) return { ...s, current: 0, threshold, bonus: 0, combos: [] }
+  if (!arts.length || !trks.length) return { ...s, current: s.boost, threshold, bonus: 0, combos: [] }
   let base = arts.reduce((a, x) => a + (x.talent ?? 0) / 100, 0) +
     trks.reduce((a, t) => a + (t.power ?? t.bonus ?? 0), 0)
-  if (s.hardware) base *= s.hardware.multiplier ?? 1
+  base *= (s.hardware?.multiplier ?? 1) + s.multBonus
   const { bonus: comboBonus, mult: comboMult, active } = detectCombos(s)
   base = base * comboMult + comboBonus
   const gb = genreBonus(genre, s, activeStages)
   let guestB = 0
   if (s.guest?.type === 'collab') guestB = s.guest.bonus ?? 0
   else if (s.guest?.type === 'viral') guestB = s.guest.power ?? 0
-  return { ...s, current: parseFloat((base + gb + guestB).toFixed(2)), threshold, bonus: gb + guestB, combos: active.map(stripCombo) }
+  return { ...s, current: parseFloat((base + gb + guestB + s.boost).toFixed(2)), threshold, bonus: gb + guestB, combos: active.map(stripCombo) }
 }
 
 export function stagePasses(s: StageState): boolean {

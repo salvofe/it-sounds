@@ -3,6 +3,7 @@ import { produce } from 'immer'
 import { TEMPLATES } from '@/lib/data'
 import type { Card } from '@/types/game'
 import { applyAction, createGame, playBotPhase, viewFor, type Action, type GameState, type PlayerId } from './index'
+import { scoreStage, emptyStage } from './rules'
 
 const T = (name: string, id: number): Card => {
   const t = TEMPLATES.find(x => x.name === name)
@@ -353,5 +354,37 @@ describe('short mode: rounds', () => {
     const d = at5([1, 1], [5, 5])
     expect(d.gameOver).toBe(true)
     expect(d.winner).toBe('draw')
+  })
+})
+
+describe('scoring with boost and upgrades', () => {
+  // 0.30 talent + 1.0 track = 1.3 base; Classical gives no bonus with one track
+  const base = () => ({ ...emptyStage(), stage: T('Small Stage', 1), artist1: T('Beat Machine', 2), track: T('Data Stream', 3) })
+
+  it('extra multiplier adds to the hardware multiplier', () => {
+    const s = scoreStage({ ...base(), hardware: T('Valve Pre-Amp', 4), multBonus: 1 }, 'Classical', 1)
+    expect(s.current).toBe(3.9) // 1.3 × (2 + 1)
+  })
+
+  it('extra multiplier without hardware multiplies by 1 + bonus', () => {
+    expect(scoreStage({ ...base(), multBonus: 1 }, 'Classical', 1).current).toBe(2.6)
+  })
+
+  it('threshold cut lowers the threshold', () => {
+    expect(scoreStage({ ...base(), thresholdCut: 1 }, 'Classical', 1).threshold).toBe(0.5)
+  })
+
+  it('boost is added on top and counts for the threshold', () => {
+    const s = scoreStage({ ...base(), stage: T('Medium Stage', 1), boost: 3 }, 'Classical', 1)
+    expect(s.current).toBe(4.3)
+    expect(s.current >= s.threshold).toBe(true) // 4.3 ≥ 3.5
+  })
+
+  it('boost still counts on a stage with no track yet', () => {
+    expect(scoreStage({ ...base(), track: null, boost: 2 }, 'Classical', 1).current).toBe(2)
+  })
+
+  it('classic stages (all fields zero) score as before', () => {
+    expect(scoreStage(base(), 'Classical', 1).current).toBe(1.3)
   })
 })
