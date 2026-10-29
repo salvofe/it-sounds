@@ -2,7 +2,27 @@
 import { useGameStore } from '@/store/gameStore'
 
 export default function RaceTracker() {
-  const { playerBestRound, aiBestRound } = useGameStore()
+  const { playerBestRound, aiBestRound, mode, roundWins, round } = useGameStore()
+  if (mode === 'short') {
+    const pips = (n: number, col: string) => Array.from({ length: 3 }, (_, i) => (
+      <span key={i} aria-hidden="true" style={{ width: 18, height: 18, display: 'inline-block', border: `2px solid ${col}`, background: i < n ? col : 'transparent', marginRight: 6 }} />
+    ))
+    return (
+      <div className="race-bar-wrap" aria-label={`Round ${round} of 5. You ${roundWins[0]}, AI ${roundWins[1]} round wins. First to 3 wins.`}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--muted)', marginBottom: 8, textAlign: 'center' }}>
+          ROUND {round} / 5 · FIRST TO 3 WINS
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--grn)' }}>YOU</span>{pips(roundWins[0], 'var(--grn)')}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--mag)' }}>AI</span>{pips(roundWins[1], 'var(--mag)')}
+          </div>
+        </div>
+      </div>
+    )
+  }
   const TARGET = 20
   const pPct = Math.min(100, (playerBestRound / TARGET) * 100)
   const aPct = Math.min(100, (aiBestRound / TARGET) * 100)

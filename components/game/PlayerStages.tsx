@@ -1,6 +1,7 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
-import { getSprite } from '@/lib/data'
+import type { CSSProperties } from 'react'
+import { getSprite, PHASES } from '@/lib/data'
 import { skinFor } from '@/lib/skins'
 import type { StageKey, StageSlot, StageState, Card } from '@/types/game'
 
@@ -41,7 +42,7 @@ function SlotView({
 }
 
 function StagePanel({ sk }: { sk: StageKey }) {
-  const { playerStages, focusedStage, unlockedStages, setFocus, moveMode, playerGenre } = useGameStore()
+  const { playerStages, focusedStage, unlockedStages, setFocus, moveMode, playerGenre, shop, playerWallet, actionsLeft, phaseIdx, boost, upgrade } = useGameStore()
   const s: StageState = playerStages[sk]
   const skin = skinFor(playerGenre)
   const focused = focusedStage === sk
@@ -143,9 +144,35 @@ function StagePanel({ sk }: { sk: StageKey }) {
         border: `1px solid ${s.current >= s.threshold && s.threshold > 0 ? '#0a3a1a' : '#3a0a0a'}`,
       }}>
         {s.threshold > 0
-          ? `FANS: ${s.current.toFixed(1)}k / NEED: ${s.threshold.toFixed(1)}k${s.bonus > 0 ? ` (+${s.bonus.toFixed(1)} bonus)` : ''}`
+          ? `FANS: ${s.current.toFixed(1)}k / NEED: ${s.threshold.toFixed(1)}k${s.bonus > 0 ? ` (+${s.bonus.toFixed(1)} bonus)` : ''}${s.boost > 0 ? ` (+${s.boost}k boost)` : ''}`
           : 'NO STAGE PLACED'}
       </div>
+
+      {shop && s.stage && (() => {
+        const phase = PHASES[phaseIdx]
+        const noAct = actionsLeft <= 0 ? 'No actions left' : null
+        const boostWhy = phase !== 'LIVE SHOW' ? 'Live Show only'
+          : !(s.artist1 || s.artist2 || s.artist3) ? 'Needs an artist'
+          : s.boost + shop.boost.amount > shop.boost.maxPerStage ? `Max +${shop.boost.maxPerStage}k`
+          : playerWallet < shop.boost.cost ? `Need ${shop.boost.cost} Hype` : noAct
+        const upWhy = phase !== 'SOUNDCHECK' && phase !== 'LIVE SHOW' ? 'Soundcheck / Live Show'
+          : s.upgraded ? 'Already upgraded'
+          : playerWallet < shop.upgrade.cost ? `Need ${shop.upgrade.cost} Hype` : noAct
+        const btn = (why: string | null): CSSProperties => ({ fontSize: 10, padding: '6px 6px', flex: 1, ...(why ? { opacity: 0.45, cursor: 'not-allowed' } : {}) })
+        return (
+          <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+            <button className="btn btn-m" style={btn(boostWhy)} disabled={!!boostWhy} title={boostWhy ?? ''} onClick={() => boost(sk)}>
+              BOOST +{shop.boost.amount}k · {shop.boost.cost}
+            </button>
+            <button className="btn btn-c" style={btn(upWhy)} disabled={!!upWhy} title={upWhy ?? 'Fans needed −1k'} onClick={() => upgrade(sk, 'threshold')}>
+              −1k NEED · {shop.upgrade.cost}
+            </button>
+            <button className="btn btn-c" style={btn(upWhy)} disabled={!!upWhy} title={upWhy ?? 'Multiplier +1'} onClick={() => upgrade(sk, 'mult')}>
+              ×+1 · {shop.upgrade.cost}
+            </button>
+          </div>
+        )
+      })()}
 
       {/* active combos */}
       {s.combos.length > 0 && (

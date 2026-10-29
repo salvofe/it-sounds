@@ -3,6 +3,7 @@ import { useGameStore } from '@/store/gameStore'
 import { PHASES } from '@/lib/data'
 import type { Phase } from '@/types/game'
 import CardComponent from './CardComponent'
+import HypeShop from './HypeShop'
 
 export default function Hand() {
   const {
@@ -54,6 +55,7 @@ export default function Hand() {
         {targetMode && (
           <button className="btn btn-r" onClick={cancelTarget}>✖ CANCEL ATTACK</button>
         )}
+        <HypeShop />
       </div>
     </div>
   )
