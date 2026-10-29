@@ -1,7 +1,6 @@
 'use client'
-import PhaseBar from '@/components/game/PhaseBar'
-import RaceTracker from '@/components/game/RaceTracker'
-import Hand from '@/components/game/Hand'
+import CenterBand from './CenterBand'
+import HandFan from './HandFan'
 import CardPreview from './CardPreview'
 import OpponentHand from './OpponentHand'
 import PlayerSide from './PlayerSide'
@@ -17,9 +16,9 @@ export default function Board() {
       <div className="board-lights" aria-hidden="true" />
       <PlayerSide who="ai"><OpponentHand /></PlayerSide>
       <div className="board-field">{KEYS.map(k => <StageZone key={k} owner="ai" sk={k} />)}</div>
-      <div className="board-center"><PhaseBar /><RaceTracker /></div>
+      <CenterBand />
       <div className="board-field">{KEYS.map(k => <StageZone key={k} owner="me" sk={k} />)}</div>
-      <PlayerSide who="me"><Hand /></PlayerSide>
+      <PlayerSide who="me"><HandFan /></PlayerSide>
       <CardPreview />
     </div>
   )

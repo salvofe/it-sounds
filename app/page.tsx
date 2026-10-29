@@ -1,7 +1,6 @@
 'use client'
 import { useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import Header from '@/components/game/Header'
 import SidePanel from '@/components/game/SidePanel'
 import TutorialOverlay from '@/components/overlays/TutorialOverlay'
 import SetupOverlay from '@/components/overlays/SetupOverlay'
@@ -41,7 +40,6 @@ export default function GamePage() {
       {/* ── Main UI (only shown once game started) ── */}
       {isStarted && (
         <>
-          <Header />
           <Board />
           <SidePanel />
         </>
