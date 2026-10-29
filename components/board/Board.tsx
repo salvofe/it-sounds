@@ -2,6 +2,7 @@
 import CenterBand from './CenterBand'
 import HandFan from './HandFan'
 import CardPreview from './CardPreview'
+import Drawer from './Drawer'
 import OpponentHand from './OpponentHand'
 import PlayerSide from './PlayerSide'
 import StageZone from './StageZone'
@@ -20,6 +21,7 @@ export default function Board() {
       <div className="board-field">{KEYS.map(k => <StageZone key={k} owner="me" sk={k} />)}</div>
       <PlayerSide who="me"><HandFan /></PlayerSide>
       <CardPreview />
+      <Drawer />
     </div>
   )
 }

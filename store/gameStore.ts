@@ -64,6 +64,7 @@ export interface GameState {
   showPhaseTransition: boolean; phaseTransitionName: string
   cardToast: CardToastData | null; comboReveal: ComboRevealData | null
   soundMuted: boolean
+  drawerOpen: boolean
   previewCard: { card: Card; owner: 'me' | 'ai'; anchor: PreviewAnchor } | null
 }
 
@@ -83,7 +84,7 @@ export interface GameActions {
   tryMoveDrop(sk: StageKey, sl: StageSlot): boolean
   dropOnStage(sk: StageKey): boolean
   undo(): void; mulligan(): void; closeResults(): void
-  setFocus(sk: StageKey): void; toggleSound(): void
+  setFocus(sk: StageKey): void; toggleSound(): void; toggleDrawer(): void
   addLog(msg: string): void; setCommentary(txt: string): void
   setPreview(p: GameState['previewCard']): void
   dismissCardToast(): void; dismissComboReveal(): void
@@ -111,6 +112,7 @@ const INITIAL: GameState = {
   showPhaseTransition: false, phaseTransitionName: '',
   cardToast: null, comboReveal: null,
   soundMuted: false,
+  drawerOpen: false,
 }
 
 function project(g: EngineState): Partial<GameState> {
@@ -393,6 +395,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       set({ focusedStage: sk }); log(`🎯 Stage ${sk} focused`)
     },
 
+    toggleDrawer() { set(s => ({ drawerOpen: !s.drawerOpen })) },
     toggleSound() { set({ soundMuted: Sound.toggle() }) },
 
     addLog: log,

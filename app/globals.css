@@ -411,3 +411,14 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 .band-system { display: flex; gap: 6px; }
 .band-system .btn { padding: 7px 10px; }
 .band-ticker { margin: 0; font-size: 20px; color: var(--grn); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Info drawer ──────────────────────────────────────────────────────────── */
+.drawer {
+  position: fixed; top: 0; right: 0; height: 100dvh; width: min(380px, 100vw); box-sizing: border-box;
+  padding: 14px; overflow-y: auto; z-index: 600; background: rgba(9,7,18,0.97); border-left: 2px solid var(--border);
+  transform: translateX(100%); visibility: hidden;
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1), visibility 0s linear 200ms;
+}
+.drawer.open { transform: none; visibility: visible; transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }

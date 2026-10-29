@@ -67,6 +67,8 @@ export default function CenterBand() {
           <button type="button" className="btn btn-g" data-testid="next-phase" onClick={st.nextPhase}>{NEXT_LABELS[phase]}</button>
         </div>
         <div className="band-system">
+          <button type="button" className="btn btn-c" data-testid="drawer-toggle" aria-expanded={st.drawerOpen}
+            aria-label={st.drawerOpen ? 'Close info' : 'Open log, combos and card list'} onClick={st.toggleDrawer}>☰ INFO</button>
           <button type="button" className="btn btn-x" data-testid="help" aria-label="Help" onClick={st.showTut}>?</button>
           <button type="button" className="btn btn-x" data-testid="sound" aria-label={st.soundMuted ? 'Sound off' : 'Sound on'} onClick={st.toggleSound}>{st.soundMuted ? '🔇' : '🔊'}</button>
           <button type="button" className="btn btn-r" data-testid="restart" aria-label="Restart"
