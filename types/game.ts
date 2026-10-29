@@ -68,6 +68,11 @@ export interface StageState {
   protected: boolean
   decoy: boolean
   combos: Combo[]
+  // Short mode, reset every round
+  boost: number         // flat fans added on top of the stage score
+  thresholdCut: number  // fans removed from the stage threshold
+  multBonus: number     // added to the hardware multiplier (or to 1 without hardware)
+  upgraded: boolean     // one upgrade per stage per round
 }
 
 // ── Genres ───────────────────────────────────────────────────────────────────

@@ -1,4 +1,7 @@
 import type { Card, Combo, Phase, StageKey, StageSlot, StageState } from '@/types/game'
+import type { Mode } from './config'
+
+export type { Mode }
 
 // ── Engine state ─────────────────────────────────────────────────────────────
 // Everything here is plain JSON: the same state can live in the browser
@@ -25,6 +28,7 @@ export interface PlayerState {
   bestRound: number
   lastRoundScore: number
   actionsLeft: number
+  extraActionsBought: number
   mustDiscard: number
   ready: boolean
   hasAttacked: boolean
@@ -42,6 +46,10 @@ export interface GameState {
   winner: PlayerId | 'draw' | null
   seed: number
   nextId: number
+  mode: Mode
+  roundWins: [number, number]
+  totalFans: [number, number]
+  lastRoundWinner: PlayerId | 'draw' | null
 }
 
 // ── Actions (what a client is allowed to ask for) ────────────────────────────

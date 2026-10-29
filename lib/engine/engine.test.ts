@@ -11,7 +11,16 @@ const T = (name: string, id: number): Card => {
 }
 
 function game(genres: [string, string] = ['Synthwave', 'Industrial'], seed = 42): GameState {
+  return createGame([{ name: 'A', genre: genres[0] }, { name: 'B', genre: genres[1] }], seed, 'classic').state
+}
+
+function shortGame(genres: [string, string] = ['Rock', 'Jazz'], seed = 42): GameState {
   return createGame([{ name: 'A', genre: genres[0] }, { name: 'B', genre: genres[1] }], seed).state
+}
+
+// replace the hand but keep everything else (unlike setHand, which also sets the wallet)
+function hand(s: GameState, pid: PlayerId, cards: Card[]): GameState {
+  return produce(s, d => { d.players[pid].hand = cards })
 }
 
 function setHand(s: GameState, pid: PlayerId, cards: Card[], wallet = 0): GameState {
@@ -221,5 +230,36 @@ describe('bot', () => {
     s = playBotPhase(s, 1).state
     expect(s.players[1].stages.s1.stage).not.toBeNull()
     expect(s.players[1].stages.s1.artist1).not.toBeNull()
+  })
+})
+
+describe('modes', () => {
+  it('createGame defaults to short mode with its own starting setup', () => {
+    const s = shortGame()
+    expect(s.mode).toBe('short')
+    expect(s.roundWins).toEqual([0, 0])
+    expect(s.totalFans).toEqual([0, 0])
+    expect(s.lastRoundWinner).toBeNull()
+    expect(s.players[0].wallet).toBe(3)
+    expect(s.players[0].actionsLeft).toBe(7)
+    expect(s.players[0].extraActionsBought).toBe(0)
+    expect(s.players[0].unlocked).toEqual({ s1: true, s2: true, s3: true })
+  })
+
+  it('Hip-Hop gets its +0.5 on round 1 in short mode', () => {
+    expect(shortGame(['Hip-Hop', 'Jazz']).players[0].wallet).toBe(3.5)
+  })
+
+  it('classic mode keeps the old setup', () => {
+    const s = game()
+    expect(s.mode).toBe('classic')
+    expect(s.players[0].wallet).toBe(0)
+    expect(s.players[0].actionsLeft).toBe(3)
+    expect(s.players[0].unlocked.s2).toBe(false)
+  })
+
+  it('new stage fields start at zero', () => {
+    const st = shortGame().players[0].stages.s1
+    expect([st.boost, st.thresholdCut, st.multBonus, st.upgraded]).toEqual([0, 0, 0, false])
   })
 })

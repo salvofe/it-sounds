@@ -4,6 +4,7 @@ import {
   TEMPLATES, DECK_LIST, DECK_SIZE, FILLER_TEMPLATE, PHASES,
   detectCombos, genreBonus, stageCostMod, isBonus, isPhaseOk,
 } from '@/lib/data'
+import { RULES, actionBudget, type Mode, type Rules } from './config'
 import type { Action, ActionResult, GameEvent, GameState, PlayerId, PlayerState } from './types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -31,6 +32,19 @@ function rand(state: GameState): number {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296
 }
 
+export function rulesOf(state: GameState): Rules {
+  return RULES[state.mode]
+}
+
+// most actions a player can hold right now (refunds never go above this)
+export function actionCap(state: GameState, p: PlayerState): number {
+  return actionBudget(rulesOf(state), state.round) + p.extraActionsBought
+}
+
+function startingWallet(rules: Rules, genre: string): number {
+  return rules.incomeOnFirstRound ? rules.roundIncome(1) + (genre === 'Hip-Hop' ? rules.hipHopRoundBonus : 0) : 0
+}
+
 function shuffleInPlace<T>(state: GameState, a: T[]): T[] {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rand(state) * (i + 1))
@@ -54,6 +68,7 @@ export function emptyStage(): StageState {
     stage: null, artist1: null, artist2: null, artist3: null,
     hardware: null, track: null, track2: null, track3: null, guest: null,
     current: 0, threshold: 0, bonus: 0, protected: false, decoy: false, combos: [],
+    boost: 0, thresholdCut: 0, multBonus: 0, upgraded: false,
   }
 }
 
@@ -166,20 +181,26 @@ function draw(state: GameState, pid: PlayerId, n: number, events: GameEvent[]) {
 
 export interface PlayerSetup { name: string; genre: string; subGenre?: string }
 
-export function createGame(setup: [PlayerSetup, PlayerSetup], seed = Date.now()): { state: GameState; events: GameEvent[] } {
+export function createGame(setup: [PlayerSetup, PlayerSetup], seed = Date.now(), mode: Mode = 'short'): { state: GameState; events: GameEvent[] } {
+  const rules = RULES[mode]
   const events: GameEvent[] = []
-  const state = produce({ players: [] as unknown, round: 1, phaseIdx: 0, gameOver: false, winner: null, seed: seed | 0, nextId: 1 } as GameState, s => {
+  const base = {
+    players: [] as unknown, round: 1, phaseIdx: 0, gameOver: false, winner: null, seed: seed | 0, nextId: 1,
+    mode, roundWins: [0, 0], totalFans: [0, 0], lastRoundWinner: null,
+  } as GameState
+  const state = produce(base, s => {
     s.players = setup.map(ps => ({
       name: ps.name, genre: ps.genre, subGenre: ps.subGenre ?? '',
       deck: [], hand: [], trash: [], stages: emptyStages(),
-      unlocked: { s1: true, s2: false, s3: false },
-      wallet: 0, bestRound: 0, lastRoundScore: 0,
-      actionsLeft: MAX_ACTIONS, mustDiscard: 0, ready: false, hasAttacked: false, mulliganUsed: false,
+      unlocked: { s1: true, s2: rules.unlockAllFromStart, s3: rules.unlockAllFromStart },
+      wallet: startingWallet(rules, ps.genre), bestRound: 0, lastRoundScore: 0,
+      actionsLeft: actionBudget(rules, 1), extraActionsBought: 0,
+      mustDiscard: 0, ready: false, hasAttacked: false, mulliganUsed: false,
       placedThisPhase: [], history: [],
     }) as PlayerState) as [PlayerState, PlayerState]
     for (const pid of [0, 1] as PlayerId[]) {
       s.players[pid].deck = buildDeck(s)
-      draw(s, pid, START_HAND, events)
+      draw(s, pid, rules.startHand, events)
     }
     events.push({ type: 'phase', phase: PHASES[0], round: 1 })
   })
@@ -204,7 +225,7 @@ function clearStages(p: PlayerState) {
 
 function advancePhase(state: GameState, events: GameEvent[]) {
   for (const p of state.players) {
-    p.ready = false; p.actionsLeft = MAX_ACTIONS; p.placedThisPhase = []; p.history = []
+    p.ready = false; p.actionsLeft = actionBudget(rulesOf(state), state.round); p.placedThisPhase = []; p.history = []
   }
 
   if (currentPhase(state) === 'RESULTS') {
@@ -217,7 +238,7 @@ function advancePhase(state: GameState, events: GameEvent[]) {
       events.push({ type: 'income', player: pid, amount: gain })
       clearStages(p)
       if (state.round >= 2) p.unlocked = { s1: true, s2: true, s3: true }
-      draw(state, pid, ROUND_DRAW, events)
+      draw(state, pid, rulesOf(state).roundDraw, events)
     })
     events.push({ type: 'phase', phase: 'ARRANGEMENT', round: state.round })
     return
@@ -234,7 +255,7 @@ function advancePhase(state: GameState, events: GameEvent[]) {
       p.lastRoundScore = scores[i]
       p.bestRound = Math.max(p.bestRound, scores[i])
     })
-    if (scores.some(x => x >= WIN_SCORE)) {
+    if (scores.some(x => x >= 20)) {
       state.gameOver = true
       state.winner = scores[0] === scores[1] ? 'draw' : scores[0] > scores[1] ? 0 : 1
     }
@@ -388,7 +409,7 @@ function findPlaced(p: PlayerState, cardId: number): { sk: StageKey; slot: Stage
 }
 
 // take a card placed this phase back to hand, refunding action and wallet
-function takeBack(p: PlayerState, pid: PlayerId, sk: StageKey, slot: StageSlot, events: GameEvent[]) {
+function takeBack(state: GameState, p: PlayerState, pid: PlayerId, sk: StageKey, slot: StageSlot, events: GameEvent[]) {
   const s = p.stages[sk]
   const card = s[slot] as Card | null
   if (!card) fail('Nothing there')
@@ -410,7 +431,7 @@ function takeBack(p: PlayerState, pid: PlayerId, sk: StageKey, slot: StageSlot, 
   p.hand.push(card)
   p.placedThisPhase = p.placedThisPhase.filter(id => id !== card.id)
   if (hi >= 0) p.history.splice(hi, 1)
-  p.actionsLeft = Math.min(p.actionsLeft + 1, MAX_ACTIONS)
+  p.actionsLeft = Math.min(p.actionsLeft + 1, actionCap(state, p))
   events.push({ type: 'returned', player: pid, card, sk, slot })
   recalc(p, pid, events)
 }
@@ -435,20 +456,20 @@ function move(p: PlayerState, pid: PlayerId, a: Extract<Action, { type: 'move' }
   recalc(p, pid, events)
 }
 
-function undo(p: PlayerState, pid: PlayerId, events: GameEvent[]) {
+function undo(state: GameState, p: PlayerState, pid: PlayerId, events: GameEvent[]) {
   const m = p.history[p.history.length - 1]
   if (!m) fail('Nothing to undo')
   if (m.type === 'def') {
     p.history.pop()
     p.stages[m.sk].protected = m.op; p.stages[m.sk].decoy = m.odecoy
     p.hand.push(m.card)
-    p.actionsLeft = Math.min(p.actionsLeft + 1, MAX_ACTIONS)
+    p.actionsLeft = Math.min(p.actionsLeft + 1, actionCap(state, p))
     events.push({ type: 'returned', player: pid, card: m.card, sk: m.sk, slot: 'defense' })
     return
   }
   const at = findPlaced(p, m.cardId)
   if (!at) fail('That card is no longer on the board')
-  takeBack(p, pid, at.sk, at.slot, events)
+  takeBack(state, p, pid, at.sk, at.slot, events)
 }
 
 function mulligan(state: GameState, pid: PlayerId, events: GameEvent[]) {
@@ -461,11 +482,11 @@ function mulligan(state: GameState, pid: PlayerId, events: GameEvent[]) {
     p.stages[k] = emptyStage()
   }
   p.deck = shuffleInPlace(state, [...p.deck, ...p.hand, ...back])
-  p.hand = []; p.wallet = 0; p.mustDiscard = 0
-  p.actionsLeft = MAX_ACTIONS; p.placedThisPhase = []; p.history = []
+  p.hand = []; p.wallet = startingWallet(rulesOf(state), p.genre); p.mustDiscard = 0
+  p.actionsLeft = actionCap(state, p); p.placedThisPhase = []; p.history = []
   p.mulliganUsed = true
   events.push({ type: 'mulligan', player: pid })
-  draw(state, pid, START_HAND, events)
+  draw(state, pid, rulesOf(state).startHand, events)
 }
 
 // ── Entry point ──────────────────────────────────────────────────────────────
@@ -491,9 +512,9 @@ export function applyAction(state: GameState, pid: PlayerId, action: Action): Ac
           events.push({ type: 'discarded', player: pid, card })
           break
         }
-        case 'pickup': takeBack(p, pid, action.sk, action.slot, events); break
+        case 'pickup': takeBack(s, p, pid, action.sk, action.slot, events); break
         case 'move': move(p, pid, action, events); break
-        case 'undo': undo(p, pid, events); break
+        case 'undo': undo(s, p, pid, events); break
         case 'mulligan': mulligan(s, pid, events); break
         case 'ready':
           p.ready = true

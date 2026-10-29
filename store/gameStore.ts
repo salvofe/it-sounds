@@ -19,6 +19,7 @@ function emptyStageState(): StageState {
     stage: null, artist1: null, artist2: null, artist3: null,
     hardware: null, track: null, track2: null, track3: null, guest: null,
     current: 0, threshold: 0, bonus: 0, protected: false, decoy: false, combos: [],
+    boost: 0, thresholdCut: 0, multBonus: 0, upgraded: false,
   }
 }
 
