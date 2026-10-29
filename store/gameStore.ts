@@ -8,6 +8,8 @@ import {
 import { Sound } from '@/lib/sound'
 import { Music } from '@/lib/music/player'
 import { mixFor } from '@/lib/music/mix'
+import { buildSteps } from '@/lib/fx/queue'
+import { Fx } from '@/lib/fx/runner'
 
 // The rules live in lib/engine (pure, symmetric, server-ready). This store only
 // holds the engine state, exposes it under the names the components read, and
@@ -242,13 +244,17 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   }
 
   function commit(g: EngineState, events: GameEvent[]) {
+    const steps = buildSteps(events, ME)
+    Fx.prepare(steps)   // measure and hide before React shows the new state
     set({ ...project(g), previewCard: null })
     for (const ev of events) handle(ev)
     Music.apply(mixFor(g, ME))
     if (g.gameOver) Music.stop(4000)   // let the results stinger play first
+    Fx.run(steps, { me: get().playerGenre, ai: get().aiGenre })
   }
 
   function dispatch(action: Action): boolean {
+    Fx.skip()   // your move ends the AI's animation sequence
     const g = get().game
     if (!g) return false
     const r = applyAction(g, ME, action)
@@ -305,6 +311,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     nextPhase() {
+      Fx.skip()
       const g = get().game
       if (!g || g.gameOver) return
       const phase = PHASES[g.phaseIdx]

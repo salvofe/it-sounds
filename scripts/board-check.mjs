@@ -96,6 +96,8 @@ async function waitMusic(expr, ms = 5000) {
   for (let t = 0; t < ms; t += 250) { if (await MU(expr)) return true; await sleep(250) }
   return false
 }
+const FX = expr => js(`(() => { const f = window.__itsoundsFx?.debug(); return f ? (${expr}) : null })()`)
+const FAKE_ATTACK = `[{ kind: 'attack', attacker: 'ai', sk: 's1', blocked: null, destroyed: [{ id: -9, type: 'artist', name: 'X', desc: '' }], at: 0 }]`
 
 // ── checks ──────────────────────────────────────────────────────────────────
 const CHECKS = {
@@ -333,6 +335,65 @@ const CHECKS = {
     const err = await js(`(() => { try { window.__itsoundsMusic.glitch(); window.__itsoundsMusic.glitch(); return '' } catch (e) { return String(e) } })()`)
     const t = await js(`(() => { const T = window.Tone; return [T.getTransport().bpm.value, T.Time('16n').toSeconds()] })()`)
     return err === '' && Math.abs(t[0] - 100) < 0.5 && Math.abs(t[1] - 0.15) < 0.002
+  }],
+  A1: ['fx: a played card flies, then sits on the stage', async () => {
+    await newGame('short', `h.some(c => ${SMALL})`)
+    await sleep(800)
+    const f0 = await FX('f.flown')
+    if (f0 === null) return false
+    await click('zone-me-s1')
+    await js(`document.querySelectorAll('[data-testid="hand-card"]')[${await idxOf(SMALL)}].click()`)
+    let flew = false
+    for (let t = 0; t < 600 && !flew; t += 50) { flew = await exists('flying-card'); if (!flew) await sleep(50) }
+    await sleep(1500)
+    return flew && (await FX('f.flown')) === f0 + 1 && (await FX('f.flights === 0 && f.hidden === 0')) === true
+      && await js(`(() => { const el = document.querySelector('[data-testid="field-card-me-s1-stage"]'); return !!el && !el.classList.contains('fx-hidden') })()`)
+  }],
+  A2: ['fx: a destroying attack shatters into pixels and shakes the stage', async () => {
+    await newGame()
+    await sleep(800)
+    const s0 = await FX('f.spawned')
+    await js(`window.__itsoundsFx.run(${FAKE_ATTACK}, { me: 'Synthwave', ai: 'Industrial' })`)
+    let shook = false
+    for (let t = 0; t < 1500 && !shook; t += 50) { shook = await js(`document.querySelector('[data-testid="zone-me-s1"]').classList.contains('fx-shake')`); if (!shook) await sleep(50) }
+    return shook && (await FX('f.spawned')) > s0
+  }],
+  A3: ['fx: reduced motion shows no particles and no flight, and the card still lands', async () => {
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+    try {
+      await newGame('short', `h.some(c => ${SMALL})`)
+      await sleep(800)
+      const [s0, f0] = await FX('[f.spawned, f.flown]')
+      await js(`window.__itsoundsFx.run(${FAKE_ATTACK}, { me: 'Synthwave', ai: 'Industrial' })`)
+      await click('zone-me-s1')
+      await clickHandCard(await idxOf(SMALL))
+      await sleep(1200)
+      const [s1, f1, h] = await FX('[f.spawned, f.flown, f.hidden]')
+      return s1 === s0 && f1 === f0 && h === 0 && await exists('field-card-me-s1-stage')
+    } finally {
+      await send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  }],
+  A4: ['fx: a click skips the AI move sequence', async () => {
+    for (let k = 0; k < 6; k++) {
+      await newGame()
+      await sleep(300)
+      await click('next-phase')
+      if (await FX('f.playing')) {
+        await js(`document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))`)
+        await sleep(100)
+        return (await FX('!f.playing && f.flights === 0 && f.hidden === 0')) === true
+      }
+    }
+    return false
+  }],
+  A5: ['fx: a card whose destination is missing is never left hidden', async () => {
+    await newGame()
+    await sleep(800)
+    const step = `[{ kind: 'fly', owner: 'me', card: { id: -7, type: 'artist', name: 'Ghost', desc: '' }, sk: 's3', slot: 'artist3', from: 'hand', at: 0 }]`
+    await js(`(() => { window.__itsoundsFx.prepare(${step}); window.__itsoundsFx.run(${step}, { me: 'Synthwave', ai: 'Industrial' }) })()`)
+    await sleep(600)
+    return (await FX('f.hidden === 0 && f.flights === 0')) === true
   }],
 }
 

@@ -1,6 +1,7 @@
 'use client'
 import type { PointerEvent } from 'react'
 import { PHASES } from '@/lib/data'
+import { slotKey, useFx } from '@/lib/fx/runner'
 import { useGameStore } from '@/store/gameStore'
 import Card from './Card'
 import { anchorOf } from './anchor'
@@ -66,9 +67,10 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
 
 function FieldSlot({ owner, sk, sl, card, genre, moving }: { owner: 'me' | 'ai'; sk: StageKey; sl: StageSlot; card: CardT; genre: string; moving: boolean }) {
   const { pickup, startMove, setPreview } = useGameStore()
+  const inFlight = useFx(s => !!s.hidden[slotKey(owner, sk, sl)])
   const show = (el: Element) => setPreview({ card, owner, anchor: anchorOf(el) })
   return (
-    <div className={`field-slot${moving ? ' moving' : ''}`} data-testid={`field-card-${owner}-${sk}-${sl}`}
+    <div className={`field-slot${moving ? ' moving' : ''}${inFlight ? ' fx-hidden' : ''}`} data-testid={`field-card-${owner}-${sk}-${sl}`}
       tabIndex={0} aria-label={`${card.name}, ${card.type}`}
       onFocus={e => show(e.currentTarget)} onBlur={() => setPreview(null)}
       onPointerEnter={(e: PointerEvent<HTMLDivElement>) => { if (e.pointerType === 'mouse') show(e.currentTarget) }}
