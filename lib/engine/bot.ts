@@ -1,6 +1,6 @@
 import { isPhaseOk } from '@/lib/data'
 import { RULES } from './config'
-import { applyAction, artists, currentPhase, roundScore, stagePasses, tracks, STAGE_KEYS } from './rules'
+import { applyAction, artists, currentPhase, roundScore, tracks, STAGE_KEYS } from './rules'
 import type { Action, GameEvent, GameState, PlayerId, PlayerState } from './types'
 
 // Greedy bot: it plays through the same applyAction as a human, so it can't
@@ -18,8 +18,10 @@ function potential(p: PlayerState): number {
     v += tracks(s).reduce((a, t) => a + (t.power ?? 0) * 1.2, 0)
     if (s.hardware) v += ((s.hardware.multiplier ?? 1) - 1) * 1.5
     if (s.guest) v += 1.5
-    v += s.current
-    if (stagePasses(s)) v += s.current + 3
+    // score and threshold check without Hype boost: a boost is valued only through the round-win term in evaluate
+    const base = s.current - s.boost
+    v += base
+    if (s.threshold > 0 && base >= s.threshold) v += base + 3
     if (filled && s.protected) v += 1.5
     if (filled && s.decoy) v += 1
   }

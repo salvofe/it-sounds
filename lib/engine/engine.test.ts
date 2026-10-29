@@ -500,3 +500,38 @@ describe('bot in short mode', () => {
     expect(['buyAction', 'buyDraw', 'boost', 'upgrade'].some(t => used.has(t))).toBe(true)
   })
 })
+
+describe('bot boost decisions', () => {
+  // Classical gives no genre bonus, so scores are plain.
+  // Small Stage (threshold 1.5) + Beat Machine (0.3 talent) + Data Stream (1.0 track) = 1.3: below threshold, scores 0.
+  // One +1k boost makes it 2.3 and passes.
+  const live = () => {
+    let s = toPhase(shortGame(['Classical', 'Classical']), 2)
+    expect(s.phaseIdx).toBe(2)
+    s = produce(s, d => { d.players[0].wallet = 20; d.players[1].wallet = 20 })
+    return s
+  }
+  const putStage = (s: GameState, pid: PlayerId, extra: object = {}) =>
+    produce(s, d => {
+      const p = d.players[pid]
+      p.stages.s1 = scoreStage({ ...emptyStage(), stage: T('Small Stage', 10 + pid), artist1: T('Beat Machine', 20 + pid), track: T('Data Stream', 30 + pid), ...extra }, p.genre, 1)
+    })
+
+  it('boosts when one boost puts its round score ahead', () => {
+    // upgraded: true so the cheaper threshold upgrade is not available; boost is the only way to pass
+    let s = putStage(putStage(live(), 0, { upgraded: true }), 1) // both 1.3, both fail: 0 vs 0
+    s = hand(s, 0, [])
+    expect(s.players[0].stages.s1.current).toBe(1.3)
+    const r = playBotPhase(s, 0)
+    expect(r.actions.some(a => a.type === 'boost')).toBe(true)
+  })
+
+  it('does not boost a round it cannot win', () => {
+    // opponent: 1.3 x 2 (Valve Pre-Amp) + 3 boost = 5.6, above the bot's best of 1.3 + 3 = 4.3
+    let s = putStage(putStage(live(), 0, { upgraded: true }), 1, { hardware: T('Valve Pre-Amp', 40), boost: 3 })
+    s = hand(s, 0, [])
+    expect(s.players[1].stages.s1.current).toBe(5.6)
+    const r = playBotPhase(s, 0)
+    expect(r.actions.some(a => a.type === 'boost')).toBe(false)
+  })
+})
