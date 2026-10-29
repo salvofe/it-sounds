@@ -538,4 +538,12 @@ describe('bot boost decisions', () => {
     const r = playBotPhase(s, 0)
     expect(r.actions.some(a => a.type === 'boost')).toBe(false)
   })
+
+  it('does not chase a deficit of 4.6k that one stage with max +3k cannot close', () => {
+    // opponent: 1.3 x 2 + 2 boost = 4.6; bot's best is 1.3 + 3 = 4.3 (< 4.6), a boost would only close part of the gap
+    let s = putStage(putStage(live(), 0, { upgraded: true }), 1, { hardware: T('Valve Pre-Amp', 40), boost: 2 })
+    s = hand(s, 0, [])
+    expect(s.players[1].stages.s1.current).toBe(4.6)
+    expect(playBotPhase(s, 0).actions.some(a => a.type === 'boost')).toBe(false)
+  })
 })

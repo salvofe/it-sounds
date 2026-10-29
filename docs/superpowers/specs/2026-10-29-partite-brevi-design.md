@@ -122,19 +122,20 @@ s2/s3 dal round 2, nessuna spesa di Hype tranne gli stage, nessuna delle quattro
   % vittorie del primo giocatore. I prezzi delle spese si ritoccano finché gli obiettivi della
   sezione Obiettivo sono raggiunti; i valori finali aggiornano la tabella di questa spec.
 
-### Risultato finale della taratura (300 partite, 62.9s)
+### Risultato finale della taratura (300 partite, 60.8s)
 
 ```
 FAIL  avg rounds (target 3.5-4.5)              4.58
-PASS  games reaching round 5 (target >=25%)    69.0%
-PASS  games using buyAction (target >=20%)     51.3%
+PASS  games reaching round 5 (target >=25%)    68.7%
+PASS  games using buyAction (target >=20%)     51.0%
 PASS  games using buyDraw (target >=20%)       100.0%
-PASS  games using boost (target >=20%)         20.3%
-PASS  games using upgrade (target >=20%)       80.3%
+FAIL  games using boost (target >=20%)         17.3%
+PASS  games using upgrade (target >=20%)       78.7%
 PASS  comebacks from 0-2                       6.7%
-PASS  first player wins                        50.0%
+PASS  first player wins                        51.7%
 PASS  draws                                    0.0%
 ```
 
-Obiettivo non raggiunto: durata media 4.58 round contro 4.5 massimo (budget 6 tarature
-esaurito; vedi il report del task 6).
+Obiettivi non raggiunti: durata media 4.58 round (massimo 4.5) e boost usato nel 17.3% delle
+partite (minimo 20%). Dopo che il bot ha smesso di sprecare boost su round non vincibili il
+boost e' sceso; budget di tarature esaurito (vedi il report del task 6).

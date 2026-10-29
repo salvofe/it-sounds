@@ -28,6 +28,24 @@ function potential(p: PlayerState, walletWeight: number): number {
   return v
 }
 
+// Highest round score the player could reach this round by spending its Hype on boosts.
+function bestReachableScore(p: PlayerState, state: GameState): number {
+  const shop = RULES[state.mode].shop
+  let left = shop ? Math.floor(p.wallet / shop.boost.cost) : 0
+  let total = 0
+  for (const k of STAGE_KEYS) {
+    const s = p.stages[k]
+    let cur = s.current
+    if (shop && s.stage && artists(s).length) {
+      const n = Math.min(left, Math.floor((shop.boost.maxPerStage - s.boost) / shop.boost.amount))
+      left -= n
+      cur += n * shop.boost.amount
+    }
+    if (s.threshold > 0 && cur >= s.threshold) total += cur
+  }
+  return total
+}
+
 function evaluate(state: GameState, pid: PlayerId): number {
   // short mode: Hype is worth more, so it isn't all spent on draws before the Live Show
   const w = RULES[state.mode].win.kind === 'bestOf' ? 0.45 : 0.25
@@ -37,9 +55,9 @@ function evaluate(state: GameState, pid: PlayerId): number {
     const mine = roundScore(state.players[pid]), theirs = roundScore(state.players[1 - pid])
     if (mine > theirs) v += 6
     else if (theirs > mine) v -= 6
-    // closing a small gap is worth something, so a boost can be a step towards winning;
-    // gaps beyond 3k (the most a boost can add on one stage) are lost causes and add nothing
-    v += 2 * Math.max(-3, Math.min(3, mine - theirs))
+    // closing a gap is worth something, but only if the round can still be won: otherwise a
+    // greedy bot would keep spending Hype on boosts that never get it ahead
+    if (bestReachableScore(state.players[pid], state) > theirs) v += 2 * Math.max(-3, Math.min(3, mine - theirs))
   }
   return v
 }
