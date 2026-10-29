@@ -32,7 +32,8 @@ async function init(): Promise<void> {
   try {
     Tone = await loadTone()
     // larger buffer: the backing track (lib/music/player) crackles with the default latency
-    try { Tone.setContext(new AudioContext({ latencyHint: 'playback' })) } catch {}
+    // dispose the context Tone created on load; Tone.Transport stays bound to it, so use getTransport()
+    try { Tone.setContext(new AudioContext({ latencyHint: 'playback' }), true) } catch {}
     await Tone.start()
     poly = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'sawtooth' },

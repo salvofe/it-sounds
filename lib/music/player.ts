@@ -28,7 +28,8 @@ let built = ''
 let want: MusicMix | null = null
 let live: MusicMix | null = null
 let step = 0, phraseStart = -1, barsInPhase = 0
-let started = false, starting = false, muted = false
+let started = false, starting = false, muted = false, stopWhenStarted = false
+let glitchUntil = 0
 let repeatId: number | null = null
 let stopTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -78,8 +79,8 @@ function buildVoices(genre: string) {
   const Tn = T!, r = recipeFor(genre)
   disposeVoices()
   recipe = r; built = genre
-  Tn.Transport.bpm.value = r.bpm
-  Tn.Transport.swing = 0          // swing is applied by the sequencer to the whole grid
+  Tn.getTransport().bpm.value = r.bpm
+  Tn.getTransport().swing = 0          // swing is applied by the sequencer to the whole grid
   M!.verb.wet.value = r.verb
   V.base = voice(Tn, { ...r.v.base, e: { attack: 0.05, decay: 0.5, sustain: 0.8, release: 1.5 } }, true)
   const bass: any = new Tn.MonoSynth({
@@ -182,13 +183,13 @@ function teardown() {
   if (stopTimer) { clearTimeout(stopTimer); stopTimer = null }
   const Tn = T
   if (Tn) {
-    try { Tn.Transport.stop(); if (repeatId !== null) Tn.Transport.clear(repeatId) } catch {}
+    try { const tr = Tn.getTransport(); tr.stop(); if (repeatId !== null) tr.clear(repeatId) } catch {}
   }
   repeatId = null
   disposeVoices()
   if (M) for (const n of Object.values(M)) { try { n.dispose() } catch {} }
   M = null; built = ''; live = null; started = false
-  step = 0; phraseStart = -1; barsInPhase = 0
+  step = 0; phraseStart = -1; barsInPhase = 0; glitchUntil = 0
 }
 
 // ── public API ──────────────────────────────────────────────────────────────
@@ -197,7 +198,8 @@ export const Music = {
   async start(): Promise<void> {
     if (typeof window === 'undefined') return
     if (stopTimer) teardown()          // a restart during the fade-out wins
-    if (started || starting) return
+    if (starting) { stopWhenStarted = false; return }   // a start during a pending stop wins
+    if (started) return
     starting = true
     try {
       await Sound.unlock()
@@ -206,9 +208,10 @@ export const Music = {
       T = Tn
       M = buildMaster(Tn)
       step = 0; phraseStart = -1; barsInPhase = 0; live = null; built = ''
-      repeatId = Tn.Transport.scheduleRepeat(tick, '16n')
-      Tn.Transport.start('+0.1')
+      repeatId = Tn.getTransport().scheduleRepeat(tick, '16n')
+      Tn.getTransport().start('+0.1')
       started = true
+      if (stopWhenStarted) { stopWhenStarted = false; teardown(); want = null }
     } catch (e) {
       console.warn('Music init failed', e)
       teardown()
@@ -223,15 +226,24 @@ export const Music = {
 
   glitch(): void {
     if (!started || !T || !M) return
-    const now = T.Transport.nextSubdivision('16n'), d = T.Time('32n').toSeconds()
-    for (let i = 0; i < 6; i++) {
-      M.glitch.triggerAttackRelease('64n', now + i * d, 0.9)
-      M.bus.gain.linearRampToValueAtTime(i % 2 ? 1 : 0.08, now + i * d + 0.004)
-    }
-    M.bus.gain.linearRampToValueAtTime(1, now + 6 * d + 0.004)
+    const now = T.getTransport().nextSubdivision('16n'), d = T.Time('32n').toSeconds()
+    if (now < glitchUntil) return   // one stutter at a time: two attacks in one commit share it
+    glitchUntil = now + 6 * d + 0.01
+    try {
+      const g = M.bus.gain
+      g.cancelScheduledValues(now)
+      g.setValueAtTime(1, now)
+      for (let i = 0; i < 6; i++) {
+        M.glitch.triggerAttackRelease('64n', now + i * d + 0.001, 0.9)
+        g.linearRampToValueAtTime(i % 2 ? 1 : 0.08, now + i * d + 0.004)
+        g.setValueAtTime(i % 2 ? 1 : 0.08, now + (i + 1) * d)
+      }
+      g.linearRampToValueAtTime(1, now + 6 * d + 0.004)
+    } catch { /* a glitch never breaks the game */ }
   },
 
   stop(afterMs = 0): void {
+    if (starting) { stopWhenStarted = true; return }
     if (!started || stopTimer) return
     stopTimer = setTimeout(() => {
       try { M?.vol.volume.rampTo(-60, 2) } catch {}

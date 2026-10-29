@@ -318,6 +318,22 @@ const CHECKS = {
     await sleep(3000)
     return await waitMusic('m.started && m.live !== null && m.repeats === 1')
   }],
+  M4: ['music: a restart while the music is still starting leaves it off', async () => {
+    await newGame()
+    if (!(await waitMusic('m.started'))) return false
+    await js(`window.__itsounds.getState().restartGame()`)
+    if (!(await waitMusic('!m.started', 4000))) return false
+    await js(`(() => { const st = window.__itsounds; st.setState({ showTutorial: false, showSetup: false }); st.getState().startGame('Synthwave', 'Darksynth', 'Industrial', 'short'); st.getState().restartGame() })()`)
+    await sleep(3500)
+    return (await MU('m.started')) === false
+  }],
+  M5: ['music: two glitches at once do not throw, and timing follows the genre tempo', async () => {
+    await newGame()
+    if (!(await waitMusic('m.started && m.live !== null'))) return false
+    const err = await js(`(() => { try { window.__itsoundsMusic.glitch(); window.__itsoundsMusic.glitch(); return '' } catch (e) { return String(e) } })()`)
+    const t = await js(`(() => { const T = window.Tone; return [T.getTransport().bpm.value, T.Time('16n').toSeconds()] })()`)
+    return err === '' && Math.abs(t[0] - 100) < 0.5 && Math.abs(t[1] - 0.15) < 0.002
+  }],
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
