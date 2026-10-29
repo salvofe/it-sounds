@@ -7,7 +7,7 @@ import CardComponent from './CardComponent'
 export default function Hand() {
   const {
     playerHand, selectedCard, phaseIdx,
-    round, nextPhase, prevPhase, undo, mulligan,
+    round, nextPhase, undo, mulligan, mulliganUsed,
     targetMode, cancelTarget,
   } = useGameStore()
 
@@ -44,11 +44,10 @@ export default function Hand() {
 
       {/* controls */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-        {round === 1 && phaseIdx === 0 && (
+        {round === 1 && phaseIdx === 0 && !mulliganUsed && (
           <button className="btn btn-y" onClick={mulligan}>MULLIGAN</button>
         )}
         <button className="btn btn-x" onClick={undo}>↩ UNDO</button>
-        <button className="btn btn-x" onClick={prevPhase}>◀ PREV PHASE</button>
         <button className="btn btn-g" style={{ fontSize: 8, padding: '8px 16px' }} onClick={nextPhase}>
           {NEXT_LABELS[phase]}
         </button>

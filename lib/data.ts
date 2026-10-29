@@ -53,9 +53,9 @@ export const TEMPLATES: Omit<Card, 'id'>[] = [
   { type: 'hardware', name: 'Valve Pre-Amp', multiplier: 2, desc: 'Stage score multiplier x2' },
   { type: 'hardware', name: 'Eurorack Drive', multiplier: 3, desc: 'Stage score multiplier x3' },
   // 13-15: attacks
-  { type: 'attack', name: 'Malware Worm', attackPower: 55, desc: 'Destroys enemy hardware' },
-  { type: 'attack', name: 'Track Corruptor', attackPower: 60, desc: 'Corrupts enemy track slot' },
-  { type: 'attack', name: 'Artist Poacher', attackPower: 70, desc: 'Steals enemy artist to trash' },
+  { type: 'attack', name: 'Malware Worm', attackPower: 55, effect: 'hardware', desc: 'Destroys enemy hardware' },
+  { type: 'attack', name: 'Track Corruptor', attackPower: 60, effect: 'track', desc: 'Corrupts enemy track slot' },
+  { type: 'attack', name: 'Artist Poacher', attackPower: 70, effect: 'artist', desc: 'Steals enemy artist to trash' },
   // 16: defense
   { type: 'defense', name: 'Firewall Shield', desc: 'Permanent stage protection – blocks all attacks' },
   // 17-19: special
@@ -69,62 +69,30 @@ export const TEMPLATES: Omit<Card, 'id'>[] = [
   { type: 'track', name: 'Megahit', power: 2.5, desc: '+2.5k fans – premium track' },
   { type: 'hardware', name: 'Studio Engineer', multiplier: 4, desc: 'Stage score multiplier x4 (rare!)' },
   // 24-28: more
-  { type: 'attack', name: 'EMP Blast', attackPower: 90, desc: 'Destroys enemy hardware AND track' },
+  { type: 'attack', name: 'EMP Blast', attackPower: 90, effect: 'emp', desc: 'Destroys enemy hardware AND track' },
   { type: 'defense', name: 'Decoy Booth', decoy: true, desc: 'One-time shield: absorbs next attack then breaks' },
   { type: 'collab', name: 'Encore', bonus: 1.5, encore: true, desc: '+1.5k fans – no condition needed' },
   { type: 'sponsor', name: 'Radio Play', income: 2, desc: '+2k Hype currency now' },
   { type: 'draw', name: 'Bootleg', draw: 3, discard: 1, desc: 'Draw 3 cards, then discard 1' },
 ]
 
-// ── Deck Builder ──────────────────────────────────────────────────────────────
+// ── Deck composition ─────────────────────────────────────────────────────────
+// [template index, copies] — both players use the same list (built in lib/engine)
 
-let _nextId = 1
-
-function makeCard(template: Omit<Card, 'id'>): Card {
-  return { ...template, id: _nextId++ }
-}
-
-function addN(templateIdx: number, count: number, deck: Card[]): void {
-  for (let i = 0; i < count; i++) {
-    deck.push(makeCard(TEMPLATES[templateIdx]))
-  }
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
-export function buildPlayerDeck(): Card[] {
-  _nextId = 1
-  const deck: Card[] = []
-  addN(0, 10, deck); addN(1, 4, deck); addN(2, 2, deck); addN(3, 2, deck)
-  addN(4, 5, deck);  addN(5, 5, deck); addN(6, 4, deck);  addN(7, 4, deck)
-  addN(8, 8, deck);  addN(9, 5, deck); addN(10, 3, deck)
-  addN(11, 5, deck); addN(12, 4, deck)
-  addN(13, 3, deck); addN(14, 2, deck); addN(15, 2, deck)
-  addN(16, 5, deck); addN(17, 2, deck); addN(18, 2, deck)
-  addN(19, 2, deck); addN(20, 3, deck)
-  addN(21, 2, deck); addN(22, 2, deck); addN(23, 1, deck)
-  addN(24, 2, deck); addN(25, 2, deck); addN(26, 2, deck)
-  addN(27, 2, deck); addN(28, 2, deck)
-  while (deck.length < 88) addN(9, 1, deck)
-  return shuffle(deck)
-}
-
-export function buildAIDeck(): Card[] {
-  const total = TEMPLATES.length
-  const deck: Card[] = []
-  for (let i = 0; i < 88; i++) {
-    const t = TEMPLATES[Math.floor(Math.random() * total)]
-    deck.push(makeCard(t))
-  }
-  return shuffle(deck)
-}
+export const DECK_LIST: [number, number][] = [
+  [0, 10], [1, 4], [2, 2], [3, 2],
+  [4, 5], [5, 5], [6, 4], [7, 4],
+  [8, 8], [9, 5], [10, 3],
+  [11, 5], [12, 4],
+  [13, 3], [14, 2], [15, 2],
+  [16, 5], [17, 2], [18, 2],
+  [19, 2], [20, 3],
+  [21, 2], [22, 2], [23, 1],
+  [24, 2], [25, 2], [26, 2],
+  [27, 2], [28, 2],
+]
+export const DECK_SIZE = 88
+export const FILLER_TEMPLATE = 9
 
 // ── Phase metadata ────────────────────────────────────────────────────────────
 
@@ -195,7 +163,7 @@ export function detectCombos(s: StageState): { bonus: number; mult: number; acti
 
 // ── Genre bonus calc ──────────────────────────────────────────────────────────
 
-export function genreBonus(genre: string, s: StageState): number {
+export function genreBonus(genre: string, s: StageState, activeStages = 0): number {
   let b = 0
   const arts = [s.artist1, s.artist2, s.artist3].filter(Boolean)
   const artN = arts.length
@@ -208,6 +176,7 @@ export function genreBonus(genre: string, s: StageState): number {
   if ((genre === 'Punk' || genre === 'Punk-AI') && artN) b += (genre === 'Punk' ? 0.2 : 0.3) * artN
   if (genre === 'Jazz') b += 0.5 * arts.filter(a => a && a.talent! >= 30).length
   if (genre === 'Classical' && trks >= 3) b += 1
+  if (genre === 'Reggae') b += 0.3 * activeStages
   return b
 }
 
@@ -299,11 +268,12 @@ export function getPhaseSprite(phase: string): string {
 
 // ── Card phase eligibility ────────────────────────────────────────────────────
 
+// must agree with isPhaseOk below — that is what the engine enforces
 export function cardPhaseLabel(type: string): string {
-  if (['stage', 'artist', 'sponsor'].includes(type)) return 'ARRANGEMENT'
-  if (['track', 'hardware', 'defense', 'collab', 'viral'].includes(type)) return 'SOUNDCHECK'
+  if (['stage', 'artist', 'draw', 'collab', 'viral', 'sponsor'].includes(type)) return 'ARRANGEMENT'
+  if (['track', 'hardware', 'defense'].includes(type)) return 'SOUNDCHECK'
   if (type === 'attack') return 'LIVE SHOW'
-  return 'ANY'
+  return '—'
 }
 
 export function isPhaseOk(type: string, phase: Phase): boolean {

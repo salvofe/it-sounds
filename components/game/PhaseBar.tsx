@@ -18,7 +18,7 @@ const PHASE_COLORS: Record<Phase, string> = {
 }
 
 export default function PhaseBar() {
-  const { phaseIdx, nextPhase, prevPhase, actionsLeft, maxActions } = useGameStore()
+  const { phaseIdx, nextPhase, actionsLeft, maxActions } = useGameStore()
   const phase = PHASES[phaseIdx] as Phase
   const col = PHASE_COLORS[phase]
 
@@ -59,7 +59,6 @@ export default function PhaseBar() {
           ACT: {actionDots}
         </span>
 
-        <button className="btn btn-x" style={{ fontSize: 5, padding: '4px 8px' }} onClick={prevPhase}>◀BACK</button>
         <button className="btn btn-y" style={{ fontSize: 6, padding: '5px 12px' }} onClick={nextPhase}>
           {NEXT_LABELS[phase]}
         </button>
