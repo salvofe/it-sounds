@@ -1,6 +1,7 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
 import { getSprite } from '@/lib/data'
+import { skinFor } from '@/lib/skins'
 import type { StageKey, StageState, Card } from '@/types/game'
 
 function AISlot({ card, label, hw = false }: { card: Card | null; label: string; hw?: boolean }) {
@@ -13,15 +14,16 @@ function AISlot({ card, label, hw = false }: { card: Card | null; label: string;
 }
 
 function AIStagePanel({ sk }: { sk: StageKey }) {
-  const { aiStages, targetMode, aiClick } = useGameStore()
+  const { aiStages, targetMode, aiClick, aiGenre } = useGameStore()
   const s: StageState = aiStages[sk]
+  const skin = skinFor(aiGenre)
 
   return (
     <div
       style={{
         background: 'var(--panel2)',
         border: `2px solid ${targetMode ? 'var(--red)' : 'var(--border)'}`,
-        borderTop: '3px solid var(--mag)',
+        borderTop: `5px solid ${skin.main}`,
         padding: 10,
         position: 'relative',
         cursor: targetMode ? 'crosshair' : 'default',

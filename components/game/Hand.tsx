@@ -27,7 +27,7 @@ export default function Hand() {
       </div>
 
       {/* card row */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, minHeight: 130, padding: '4px 0' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, minHeight: 270, padding: '14px 8px 8px' }}>
         {playerHand.map((card, i) => (
           <CardComponent
             key={card.id}

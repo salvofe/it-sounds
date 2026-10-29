@@ -1,6 +1,7 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
 import { getSprite } from '@/lib/data'
+import { skinFor } from '@/lib/skins'
 import type { StageKey, StageSlot, StageState, Card } from '@/types/game'
 
 function SlotView({
@@ -40,8 +41,9 @@ function SlotView({
 }
 
 function StagePanel({ sk }: { sk: StageKey }) {
-  const { playerStages, focusedStage, unlockedStages, setFocus, moveMode } = useGameStore()
+  const { playerStages, focusedStage, unlockedStages, setFocus, moveMode, playerGenre } = useGameStore()
   const s: StageState = playerStages[sk]
+  const skin = skinFor(playerGenre)
   const focused = focusedStage === sk
   const locked = !unlockedStages[sk]
 
@@ -65,7 +67,7 @@ function StagePanel({ sk }: { sk: StageKey }) {
       style={{
         background: 'var(--panel2)',
         border: `2px solid ${focused ? 'var(--yel)' : 'var(--border)'}`,
-        borderTop: '3px solid var(--cyan)',
+        borderTop: `5px solid ${skin.main}`,
         padding: 10,
         cursor: 'pointer',
         position: 'relative',
