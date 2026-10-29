@@ -158,11 +158,6 @@ body::before {
   font: inherit; color: inherit; appearance: none;
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.game-card.selected { transform: translateY(-8px) rotate(-1deg); }
-@media (hover: hover) {
-  .game-card:hover { transform: translateY(-5px); }
-  .game-card.selected:hover { transform: translateY(-8px) rotate(-1deg); }
-}
 .game-card:active { transform: scale(0.97); }
 .game-card:focus-visible { outline: 3px solid var(--cyan) !important; outline-offset: 3px; }
 
@@ -309,3 +304,18 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 /* ── Scrollbar global ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
+
+/* ── Hand fan ─────────────────────────────────────────────────────────────── */
+.hand-fan { display: flex; justify-content: center; align-items: flex-end; height: 100%; padding: 0 12px; }
+.hand-empty { align-self: center; font-size: 20px; color: var(--muted); }
+.fan-card {
+  position: relative; flex-shrink: 0;
+  transform: translateY(var(--lift)) rotate(var(--rot)); transform-origin: 50% 120%;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.fan-card:hover, .fan-card:focus-within, .fan-card.selected { transform: translateY(-34px) rotate(0deg); z-index: 50 !important; }
+
+/* ── Card preview ─────────────────────────────────────────────────────────── */
+.card-preview { position: fixed; z-index: 400; pointer-events: none; filter: drop-shadow(0 12px 30px rgba(0,0,0,0.75)); }
+
+@media (prefers-reduced-motion: reduce) { .fan-card { transition: none; } }

@@ -2,12 +2,12 @@
 import { useGameStore } from '@/store/gameStore'
 import { PHASES } from '@/lib/data'
 import type { Phase } from '@/types/game'
-import CardComponent from './CardComponent'
+import HandFan from '@/components/board/HandFan'
 import HypeShop from './HypeShop'
 
 export default function Hand() {
   const {
-    playerHand, selectedCard, phaseIdx,
+    phaseIdx,
     round, nextPhase, undo, mulligan, mulliganUsed,
     targetMode, cancelTarget,
   } = useGameStore()
@@ -28,20 +28,7 @@ export default function Hand() {
       </div>
 
       {/* card row */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, minHeight: 270, padding: '14px 8px 8px' }}>
-        {playerHand.map((card, i) => (
-          <CardComponent
-            key={card.id}
-            card={card}
-            index={i}
-            selected={selectedCard === i}
-            phase={phase}
-          />
-        ))}
-        {playerHand.length === 0 && (
-          <div style={{ color: 'var(--muted)', fontSize: 19, padding: '20px 0' }}>Hand is empty — advance to next round to draw more cards.</div>
-        )}
-      </div>
+      <div style={{ minHeight: 330 }}><HandFan /></div>
 
       {/* controls */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>

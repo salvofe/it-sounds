@@ -27,6 +27,8 @@ function emptyStages(): Record<StageKey, StageState> {
   return { s1: emptyStageState(), s2: emptyStageState(), s3: emptyStageState() }
 }
 
+export interface PreviewAnchor { left: number; top: number; width: number; height: number }
+
 // ── State & Actions types ─────────────────────────────────────────────────────
 
 export interface GameState {
@@ -62,6 +64,7 @@ export interface GameState {
   showPhaseTransition: boolean; phaseTransitionName: string
   cardToast: CardToastData | null; comboReveal: ComboRevealData | null
   soundMuted: boolean
+  previewCard: { card: Card; owner: 'me' | 'ai'; anchor: PreviewAnchor } | null
 }
 
 export interface GameActions {
@@ -81,6 +84,7 @@ export interface GameActions {
   undo(): void; mulligan(): void; closeResults(): void
   setFocus(sk: StageKey): void; toggleSound(): void
   addLog(msg: string): void; setCommentary(txt: string): void
+  setPreview(p: GameState['previewCard']): void
   dismissCardToast(): void; dismissComboReveal(): void
 }
 
@@ -88,6 +92,7 @@ export interface GameActions {
 
 const INITIAL: GameState = {
   game: null,
+  previewCard: null,
   isStarted: false, playerGenre: 'Synthwave', playerSubGenre: 'Darksynth', aiGenre: 'Industrial',
   round: 1, phaseIdx: 0,
   playerDeck: [], playerHand: [], playerTrash: [], playerStages: emptyStages(),
@@ -231,7 +236,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   }
 
   function commit(g: EngineState, events: GameEvent[]) {
-    set(project(g))
+    set({ ...project(g), previewCard: null })
     for (const ev of events) handle(ev)
   }
 
@@ -342,6 +347,8 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     cancelTarget() { set({ targetMode: false, selectedCard: null }) },
+
+    setPreview(p) { set({ previewCard: p }) },
 
     trashCard(idx) { dispatch({ type: 'discard', handIdx: idx }) },
 

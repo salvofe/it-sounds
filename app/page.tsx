@@ -14,6 +14,7 @@ import ResultsOverlay from '@/components/overlays/ResultsOverlay'
 import PhaseTransition from '@/components/overlays/PhaseTransition'
 import CardToast from '@/components/overlays/CardToast'
 import ComboReveal from '@/components/overlays/ComboReveal'
+import CardPreview from '@/components/board/CardPreview'
 
 export default function GamePage() {
   const { isStarted, targetMode } = useGameStore()
@@ -34,6 +35,7 @@ export default function GamePage() {
       <PhaseTransition />
       <CardToast />
       <ComboReveal />
+      <CardPreview />
 
       {/* ── Target mode banner ── */}
       {targetMode && (
