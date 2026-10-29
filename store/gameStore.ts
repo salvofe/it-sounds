@@ -27,6 +27,8 @@ function emptyStages(): Record<StageKey, StageState> {
   return { s1: emptyStageState(), s2: emptyStageState(), s3: emptyStageState() }
 }
 
+export interface PreviewAnchor { left: number; top: number; width: number; height: number }
+
 // ── State & Actions types ─────────────────────────────────────────────────────
 
 export interface GameState {
@@ -62,6 +64,8 @@ export interface GameState {
   showPhaseTransition: boolean; phaseTransitionName: string
   cardToast: CardToastData | null; comboReveal: ComboRevealData | null
   soundMuted: boolean
+  drawerOpen: boolean
+  previewCard: { card: Card; owner: 'me' | 'ai'; anchor: PreviewAnchor } | null
 }
 
 export interface GameActions {
@@ -78,9 +82,11 @@ export interface GameActions {
   trashCard(idx: number): void
   startMove(sk: StageKey, sl: StageSlot): void
   tryMoveDrop(sk: StageKey, sl: StageSlot): boolean
+  dropOnStage(sk: StageKey): boolean
   undo(): void; mulligan(): void; closeResults(): void
-  setFocus(sk: StageKey): void; toggleSound(): void
+  setFocus(sk: StageKey): void; toggleSound(): void; toggleDrawer(): void
   addLog(msg: string): void; setCommentary(txt: string): void
+  setPreview(p: GameState['previewCard']): void
   dismissCardToast(): void; dismissComboReveal(): void
 }
 
@@ -88,6 +94,7 @@ export interface GameActions {
 
 const INITIAL: GameState = {
   game: null,
+  previewCard: null,
   isStarted: false, playerGenre: 'Synthwave', playerSubGenre: 'Darksynth', aiGenre: 'Industrial',
   round: 1, phaseIdx: 0,
   playerDeck: [], playerHand: [], playerTrash: [], playerStages: emptyStages(),
@@ -105,6 +112,7 @@ const INITIAL: GameState = {
   showPhaseTransition: false, phaseTransitionName: '',
   cardToast: null, comboReveal: null,
   soundMuted: false,
+  drawerOpen: false,
 }
 
 function project(g: EngineState): Partial<GameState> {
@@ -231,7 +239,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   }
 
   function commit(g: EngineState, events: GameEvent[]) {
-    set(project(g))
+    set({ ...project(g), previewCard: null })
     for (const ev of events) handle(ev)
   }
 
@@ -312,6 +320,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       const { playerHand, phaseIdx, mustDiscard, focusedStage } = get()
       const card = playerHand[idx]
       if (!card) return
+      set({ moveMode: null })
       if (mustDiscard > 0) { dispatch({ type: 'discard', handIdx: idx }); return }
       const phase = PHASES[phaseIdx] as Phase
       if (!isPhaseOk(card.type, phase)) { log(`✖ ${card.name} can't be played in ${phase} phase`); return }
@@ -343,6 +352,8 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
 
     cancelTarget() { set({ targetMode: false, selectedCard: null }) },
 
+    setPreview(p) { set({ previewCard: p }) },
+
     trashCard(idx) { dispatch({ type: 'discard', handIdx: idx }) },
 
     startMove(sk, sl) {
@@ -361,6 +372,18 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       return true
     },
 
+    // board: a stage zone was clicked while a card is being moved → first free slot of the same kind
+    dropOnStage(sk) {
+      const { moveMode, playerStages } = get()
+      if (!moveMode) return false
+      if (sk === moveMode.sk) { set({ moveMode: null }); log('Move cancelled'); return true }
+      const from = moveMode.sl
+      const kind: StageSlot[] = from.startsWith('artist') ? ['artist1', 'artist2', 'artist3']
+        : from.startsWith('track') ? ['track', 'track2', 'track3'] : [from]
+      const slot = kind.find(k => !playerStages[sk][k]) ?? kind[0]
+      return get().tryMoveDrop(sk, slot)
+    },
+
     undo() { dispatch({ type: 'undo' }) },
     mulligan() { dispatch({ type: 'mulligan' }) },
 
@@ -371,9 +394,10 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
 
     setFocus(sk) {
       if (!get().unlockedStages[sk]) return
-      set({ focusedStage: sk }); log(`🎯 Stage ${sk} focused`)
+      set({ focusedStage: sk, moveMode: null }); log(`🎯 Stage ${sk} focused`)
     },
 
+    toggleDrawer() { set(s => ({ drawerOpen: !s.drawerOpen })) },
     toggleSound() { set({ soundMuted: Sound.toggle() }) },
 
     addLog: log,

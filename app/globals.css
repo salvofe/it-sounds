@@ -43,8 +43,6 @@ body::before {
   z-index: 9000;
 }
 
-/* ── Typography helpers ──────────────────────────────────────────────────────── */
-.px { font-family: 'Press Start 2P', monospace; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────────── */
 .btn {
@@ -103,65 +101,23 @@ body::before {
 .pt-y { color: var(--yel); }
 .pt-g { color: var(--grn); }
 
-/* pixel corners */
-.px-corner { position: absolute; width: 7px; height: 7px; pointer-events: none; }
-.px-corner.tl { top: 0; left: 0; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
-.px-corner.tr { top: 0; right: 0; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
-.px-corner.bl { bottom: 0; left: 0; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
-.px-corner.br { bottom: 0; right: 0; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
-
-/* ── Stage slot ──────────────────────────────────────────────────────────────── */
-.slot {
-  background: #06060f;
-  border: 1px solid var(--border);
-  padding: 5px 7px;
-  margin-top: 4px;
-  font-size: 19px;
-  min-height: 40px;
-  cursor: pointer;
-  transition: border-color 0.1s;
-  line-height: 1.3;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.slot:hover { border-color: var(--cyan); }
-.slot.empty { color: var(--muted); }
-.slot.filled { color: #fff; }
-.slot.hw { border-style: dashed; }
-
-.slot-thumb {
-  width: 32px; height: 32px;
-  image-rendering: pixelated;
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-  background: #03030a;
-  overflow: hidden;
-}
-.slot-txt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 /* ── Sprite animations ────────────────────────────────────────────────────────── */
-@keyframes spr-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes spr-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes spr-pulse  { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.08); filter: brightness(1.3); } }
 @keyframes spr-float  { 0%, 100% { transform: translateY(0) rotate(0deg); } 33% { transform: translateY(-2px) rotate(-2deg); } 66% { transform: translateY(2px) rotate(2deg); } }
 @keyframes spr-shake  { 0%, 100% { transform: translate(0); } 25% { transform: translate(-1px, 1px); } 75% { transform: translate(1px, -1px); } }
 
 /* sprites only move on the card you're pointing at or have selected */
-.game-card:hover .anim-bounce, .game-card.selected .anim-bounce { animation: spr-bounce 0.8s ease-in-out infinite; }
+.game-card:hover .anim-bounce, .game-card.selected .anim-bounce { animation: spr-bob 0.8s ease-in-out infinite; }
 .game-card:hover .anim-pulse,  .game-card.selected .anim-pulse  { animation: spr-pulse  1.4s ease-in-out infinite; }
 .game-card:hover .anim-float,  .game-card.selected .anim-float  { animation: spr-float  2.2s ease-in-out infinite; }
 .game-card:hover .anim-shake,  .game-card.selected .anim-shake  { animation: spr-shake  0.5s ease-in-out infinite; }
 
 /* ── Hand cards (skins in lib/skins.ts) ──────────────────────────────────────── */
+.hand-card-btn { all: unset; display: block; }
 .game-card {
   font: inherit; color: inherit; appearance: none;
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-.game-card.selected { transform: translateY(-8px) rotate(-1deg); }
-@media (hover: hover) {
-  .game-card:hover { transform: translateY(-5px); }
-  .game-card.selected:hover { transform: translateY(-8px) rotate(-1deg); }
 }
 .game-card:active { transform: scale(0.97); }
 .game-card:focus-visible { outline: 3px solid var(--cyan) !important; outline-offset: 3px; }
@@ -189,27 +145,6 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
   .game-card [class^='anim-'] { animation: none !important; }
 }
 
-/* ── Flash message ───────────────────────────────────────────────────────────── */
-@keyframes fade-out { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
-.flash-msg {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #0a0a1e;
-  border: 2px solid var(--yel);
-  color: var(--yel);
-  padding: 10px 18px;
-  font-family: 'VT323', monospace;
-  font-size: 20px;
-  z-index: 7000;
-  max-width: 80%;
-  text-align: center;
-  box-shadow: 0 0 16px rgba(255, 238, 0, 0.3);
-  animation: fade-out 2.5s forwards;
-  pointer-events: none;
-}
-
 /* ── Target banner ───────────────────────────────────────────────────────────── */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .target-banner {
@@ -220,8 +155,8 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
   text-align: center;
   font-family: 'Press Start 2P', monospace;
   font-size: 11px;
-  margin: 6px 14px;
-  animation: blink 0.5s infinite;
+  position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 700;
+  animation: blink 1.2s ease-in-out infinite;
 }
 
 /* ── Phase transition fullscreen overlay ─────────────────────────────────────── */
@@ -275,13 +210,6 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 .log-box::-webkit-scrollbar { width: 4px; }
 .log-box::-webkit-scrollbar-thumb { background: var(--border); }
 
-/* ── Race bar ────────────────────────────────────────────────────────────────── */
-.race-bar-wrap {
-  padding: 8px 14px;
-  background: #04040e;
-  border-bottom: 2px solid var(--border);
-}
-
 /* ── Browser surfaces ───────────────────────────────────────────────────────── */
 ::selection { background: var(--mag); color: #fff; }
 .log-box, .num { font-variant-numeric: tabular-nums; }
@@ -295,17 +223,179 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 }
 .card-bonus-tag { position: absolute; top: 6px; left: 6px; }
 
-/* ── Layout: stack the side panel and stage lanes on narrow screens ─────────── */
-.game-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 10px; padding: 10px 14px; }
-.stage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-@media (max-width: 1100px) {
-  .game-grid { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 760px) {
-  .stage-grid { grid-template-columns: minmax(0, 1fr); }
-  .game-grid { padding: 8px; }
-}
-
 /* ── Scrollbar global ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
+
+/* ── Hand fan ─────────────────────────────────────────────────────────────── */
+.hand-fan { display: flex; justify-content: center; align-items: flex-start; height: 100%; padding: 0 12px; }
+/* the hand peeks up from the bottom edge: the row clips what hangs below it */
+.side-me { overflow: visible; }
+/* The hand's box reaches 50px up over the field zones (room for the lifted card) and clips what hangs below the table;
+   it ignores the pointer except on the cards themselves. */
+.side-me .side-center { align-items: flex-start; height: calc(100% + 50px); margin-top: -50px; padding-top: 58px; box-sizing: border-box; overflow: clip; position: relative; z-index: 30; pointer-events: none; }
+.side-me .fan-card, .side-me .hand-empty { pointer-events: auto; }
+.hand-empty { align-self: center; font-size: 20px; color: var(--muted); }
+.fan-card {
+  position: relative; flex-shrink: 0;
+  transform: translateY(var(--lift)) rotate(var(--rot)); transform-origin: 50% 120%;
+}
+/* The outer element never moves on hover (stable hit area); only this inner wrapper lifts. */
+.fan-card-lift { position: relative; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.fan-card:hover, .fan-card:focus-within, .fan-card.selected { z-index: 50 !important; }
+.fan-card:hover .fan-card-lift, .fan-card:focus-within .fan-card-lift, .fan-card.selected .fan-card-lift {
+  transform: translateY(calc(var(--lift) * -1 - 34px)) rotate(calc(var(--rot) * -1));
+}
+
+/* ── Card preview ─────────────────────────────────────────────────────────── */
+.card-preview { position: fixed; z-index: 400; pointer-events: none; filter: drop-shadow(0 12px 30px rgba(0,0,0,0.75)); }
+
+@media (prefers-reduced-motion: reduce) { .fan-card-lift { transition: none; } }
+
+/* ── Board (card table) ───────────────────────────────────────────────────── */
+.board {
+  position: relative; height: 100dvh; min-height: 640px; box-sizing: border-box; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1.2fr) clamp(180px, 25vh, 240px);
+  gap: 6px; padding: 10px 16px 0; --fs: 1;
+  background: radial-gradient(ellipse at 50% 45%, #1d1233 0%, #120b22 55%, #07050f 100%);
+}
+.board-lights { position: absolute; inset: -40px 0 auto 0; height: 320px; pointer-events: none; }
+.board-field { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; min-height: 0; padding: 0 clamp(0px, 4vw, 90px); }
+.board-center { min-width: 0; }
+
+.side { display: grid; grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 0; }
+.side-me { align-items: end; grid-template-rows: minmax(0, 1fr); }
+.side-badge { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 2px solid; border-radius: 12px; background: rgba(7,5,15,0.85); min-width: 0; }
+.side-me .side-badge { margin-bottom: 14px; }
+.side-name { font-family: 'Press Start 2P', monospace; font-size: 11px; line-height: 1.6; }
+.side-line { font-size: 20px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-bonus { color: #b4bdd4; }
+.side-comment { color: #ff88cc; font-style: italic; }
+.side-center { min-width: 0; height: 100%; display: flex; justify-content: center; align-items: flex-end; }
+.side-ai .side-center { align-items: center; }
+.side-piles { display: flex; gap: 10px; }
+.side-me .side-piles { margin-bottom: 14px; }
+.pile {
+  width: 64px; height: 88px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 2px solid; border-radius: 8px; font-size: 20px;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 6px, transparent 6px 12px), #0b0816;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.5), 6px 6px 0 rgba(0,0,0,0.3);
+}
+.pile-trash { background: #0b0816; }
+.pile-n { font-size: 26px; }
+.opp-hand { display: flex; justify-content: center; padding-top: 4px; }
+.card-back { display: inline-block; width: 46px; height: 64px; border-radius: 6px; border: 2px solid #111; box-shadow: 0 0 0 2px rgba(255,255,255,0.8); }
+
+.zone {
+  position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 0; padding: 6px 8px; overflow: hidden;
+  border-radius: 14px; border: 2px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03);
+  cursor: pointer; transition: border-color 120ms, background 120ms;
+}
+.zone-me.focused { border-style: solid; border-color: var(--yel); background: rgba(255,238,0,0.05); }
+.zone.passes { background: rgba(0,255,102,0.06); }
+.zone.target { border-style: solid; border-color: var(--red); box-shadow: 0 0 14px rgba(255,34,68,0.45); cursor: crosshair; }
+.zone.locked { opacity: 0.45; cursor: not-allowed; }
+.zone-ai:not(.target) { cursor: default; }
+.zone-head { all: unset; display: flex; align-items: center; gap: 8px; cursor: inherit; }
+.zone-head:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
+.zone-label { font-family: 'Press Start 2P', monospace; font-size: 11px; line-height: 1.6; color: var(--yel); }
+.zone-ai .zone-label { color: #ffb27a; }
+.zone-score { margin-left: auto; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.zone.passes .zone-score { color: var(--grn); }
+.zone-shield { font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 3px 5px; border: 1px solid var(--grn); color: var(--grn); }
+.zone-cards { display: flex; align-items: flex-start; justify-content: center; min-height: calc(132px * var(--fs)); padding-left: 2px; }
+.field-placeholder { box-sizing: border-box; width: calc(88px * var(--fs)); height: calc(132px * var(--fs)); display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(255,255,255,0.22); border-radius: 8px; font-family: 'Press Start 2P', monospace; font-size: 9px; color: rgba(255,255,255,0.35); }
+.field-slot { position: relative; flex: 0 1 calc(88px * var(--fs)); min-width: 22px; height: calc(132px * var(--fs)); }
+.field-slot:nth-child(odd) .field-card-inner { rotate: -1.5deg; }
+.field-slot:nth-child(even) .field-card-inner { rotate: 1.5deg; }
+.field-slot:hover, .field-slot:focus-within { z-index: 20; }
+.field-slot:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
+.field-slot.moving .card-face { outline: 3px solid var(--cyan); }
+.field-card-inner { position: absolute; left: 0; top: 0; width: 88px; transition: transform 120ms; transform: scale(var(--fs)); transform-origin: top left; }
+.field-slot:hover .field-card-inner, .field-slot:focus-visible .field-card-inner { transform: translateY(-6px) scale(var(--fs)); }
+.field-actions { position: absolute; left: 4px; bottom: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity 120ms; z-index: 2; }
+.field-slot:hover .field-actions, .field-slot:focus-within .field-actions { opacity: 1; }
+@media (hover: none) { .field-actions { opacity: 1; } .field-actions button { width: 40px; height: 40px; } }
+.field-actions button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--cyan); background: #07050f; color: var(--cyan); font-size: 15px; cursor: pointer; }
+.field-actions button:last-child { border-color: var(--red); color: var(--red); }
+.zone-cap { font-size: 20px; line-height: 1.1; color: #b4bdd4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zone-decoy { border-color: var(--yel); color: var(--yel); }
+.zone-shop { display: flex; gap: 4px; }
+.zone-shop .btn { font-size: 9px; letter-spacing: 0; padding: 6px 2px; flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Centre band ──────────────────────────────────────────────────────────── */
+.band { display: flex; flex-direction: column; gap: 4px; padding: 5px 12px; border-top: 1px solid rgba(255,255,255,0.12); border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(5,4,12,0.72); }
+.band-row { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.band-row-info { min-height: 28px; }
+.band-row-actions { min-height: 38px; }
+.band-round { font-family: 'Press Start 2P', monospace; font-size: 11px; line-height: 1.6; color: var(--yel); white-space: nowrap; }
+.band-pips { font-family: 'VT323', monospace; font-size: 20px; color: var(--text); margin-left: 8px; }
+.band-phases { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.band-phases li { font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 6px 7px; color: var(--muted); border: 1px solid rgba(255,255,255,0.18); }
+.band-phases li.done { color: #b8ffd4; background: rgba(0,255,102,0.15); border-color: transparent; }
+.band-phases li.now { color: #05040c; background: var(--cyan); border-color: var(--cyan); }
+.band-stat { font-size: 22px; white-space: nowrap; }
+.band-warn { font-family: 'Press Start 2P', monospace; font-size: 10px; color: var(--red); white-space: nowrap; }
+.band-buttons { display: flex; gap: 6px; }
+.band-system { display: flex; gap: 6px; margin-left: auto; }
+.band-system .btn { padding: 7px 10px; }
+.band-buttons .btn, .band-system .btn { white-space: nowrap; }
+.band-ticker { flex: 1 1 0; min-width: 0; margin: 0; font-size: 20px; color: var(--grn); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+
+/* ── Info drawer ──────────────────────────────────────────────────────────── */
+.drawer {
+  position: fixed; top: 0; right: 0; height: 100dvh; width: min(460px, 100vw); box-sizing: border-box;
+  padding: 14px; overflow-y: auto; z-index: 600; background: rgba(9,7,18,0.97); border-left: 2px solid var(--border);
+  transform: translateX(100%); visibility: hidden;
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1), visibility 0s linear 200ms;
+}
+.drawer.open { transform: none; visibility: visible; transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+@media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
+
+/* ── Table look ───────────────────────────────────────────────────────────── */
+/* stage lights and the mat edge */
+.board-lights {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(0,229,255,0.18), transparent 55%),
+    radial-gradient(ellipse at 50% 0%, rgba(255,0,170,0.18), transparent 55%),
+    radial-gradient(ellipse at 80% 0%, rgba(255,238,0,0.14), transparent 55%);
+}
+.board::before {
+  content: ''; position: absolute; inset: 70px 1.5vw 18px; border-radius: 28px; pointer-events: none;
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.65), 0 0 0 2px rgba(255,255,255,0.05);
+}
+
+/* ── Short desktops (1280x800) ────────────────────────────────────────────── */
+@media (max-height: 860px) and (min-width: 761px) {
+  .side-bonus, .side-comment { display: none; }
+  .zone-ai .zone-cap { display: none; }
+  .pile { width: 56px; height: 64px; }
+  .pile-n { font-size: 22px; }
+  .card-back { width: 40px; height: 54px; }
+  .side-me .side-badge, .side-me .side-piles { margin-bottom: 8px; }
+}
+
+/* ── Phone ────────────────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .board { height: auto; min-height: 100dvh; overflow: visible; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: auto; padding: 8px; }
+  .board::before { display: none; }
+  .board-field { grid-template-columns: minmax(0, 1fr); padding: 0; }
+  .side { grid-template-columns: minmax(0, 1fr); }
+  .side-piles { justify-content: flex-start; }
+  .side-me .side-badge, .side-me .side-piles { margin-bottom: 0; }
+  .hand-fan { justify-content: flex-start; overflow-x: auto; padding: 40px 12px 12px; height: auto; }
+  .fan-card { transform: none !important; margin-left: 8px !important; }
+  .band-row { flex-wrap: wrap; gap: 8px 10px; }
+  .band-row-info, .band-row-actions { min-height: 0; }
+  .band-buttons { flex-wrap: wrap; }
+  .band-system { margin-left: 0; }
+  .band-ticker { flex-basis: 100%; text-align: left; }
+  .side-me { overflow: visible; grid-template-rows: none; }
+  .side-me .side-center { height: 100%; margin-top: 0; padding-top: 0; overflow: visible; z-index: auto; pointer-events: auto; }
+}
+
+/* Field card scale: bigger on tall screens, tighter on short ones */
+@media (max-height: 860px) { .board { --fs: 0.86; } }
+@media (min-height: 1000px) { .board { --fs: 1.25; } }

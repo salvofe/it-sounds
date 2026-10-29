@@ -610,6 +610,9 @@ export function applyAction(state: GameState, pid: PlayerId, action: Action): Ac
           if (s.players.every(x => x.ready)) advancePhase(s, events)
           break
       }
+      // events may reference draft objects (cards, combos); copy them to plain data before the drafts are revoked
+      const plain = JSON.parse(JSON.stringify(events)) as GameEvent[]
+      events.splice(0, events.length, ...plain)
     })
     return { ok: true, state: next, events }
   } catch (e) {
