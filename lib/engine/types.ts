@@ -79,7 +79,8 @@ export type GameEvent =
   | { type: 'income'; player: PlayerId; amount: number }
   | { type: 'ready'; player: PlayerId }
   | { type: 'phase'; phase: Phase; round: number }
-  | { type: 'results'; scores: [number, number]; gameOver: boolean; winner: PlayerId | 'draw' | null }
+  | { type: 'results'; scores: [number, number]; gameOver: boolean; winner: PlayerId | 'draw' | null; roundWins: [number, number] }
+  | { type: 'roundWon'; winner: PlayerId | 'draw'; scores: [number, number]; roundWins: [number, number] }
   | { type: 'mulligan'; player: PlayerId }
 
 export type ActionResult =

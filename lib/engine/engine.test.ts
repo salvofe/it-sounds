@@ -263,3 +263,95 @@ describe('modes', () => {
     expect([st.boost, st.thresholdCut, st.multBonus, st.upgraded]).toEqual([0, 0, 0, false])
   })
 })
+
+// a Small Stage that passes its 1.5k threshold: 0.3 talent + 1.5 track (+0.4 Rock bonus)
+function winningStage(s: GameState, pid: PlayerId): GameState {
+  s = hand(s, pid, [T('Small Stage', 700 + pid * 10), T('Beat Machine', 701 + pid * 10)])
+  s = ok(s, pid, { type: 'play', handIdx: 0, sk: 's1' }).state
+  s = ok(s, pid, { type: 'play', handIdx: 0, sk: 's1' }).state
+  s = readyBoth(s)
+  s = hand(s, pid, [T('Hypnotic Loop', 702 + pid * 10)])
+  return ok(s, pid, { type: 'play', handIdx: 0, sk: 's1' }).state
+}
+
+describe('short mode: actions', () => {
+  it('one budget for the whole round, not refilled per phase', () => {
+    let s = hand(shortGame(), 0, [T('Small Stage', 900)])
+    s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
+    expect(s.players[0].actionsLeft).toBe(6)
+    s = readyBoth(s)
+    expect(s.phaseIdx).toBe(1)
+    expect(s.players[0].actionsLeft).toBe(6)
+  })
+
+  it('budget grows 7, 8, 9, 10 and unspent actions are lost', () => {
+    let s = shortGame()
+    const seen: number[] = []
+    for (let r = 1; r <= 4; r++) { seen.push(s.players[0].actionsLeft); s = toPhase(s, 3); s = readyBoth(s) }
+    expect(seen).toEqual([7, 8, 9, 10])
+  })
+
+  it('picking a card back up never goes above the budget', () => {
+    let s = hand(shortGame(), 0, [T('Small Stage', 900)])
+    s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
+    s = ok(s, 0, { type: 'pickup', sk: 's1', slot: 'stage' }).state
+    expect(s.players[0].actionsLeft).toBe(7)
+  })
+
+  it('mulligan keeps the short-mode starting Hype and budget', () => {
+    let s = hand(shortGame(['Hip-Hop', 'Jazz']), 0, [T('Small Stage', 900)])
+    s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
+    s = ok(s, 0, { type: 'mulligan' }).state
+    expect(s.players[0].wallet).toBe(3.5)
+    expect(s.players[0].actionsLeft).toBe(7)
+  })
+})
+
+describe('short mode: rounds', () => {
+  it('the higher score wins the round; fans do not become Hype', () => {
+    let s = winningStage(shortGame(), 0)
+    const r = ok(ok(toPhase(s, 2), 0, { type: 'ready' }).state, 1, { type: 'ready' })
+    s = r.state
+    expect(s.phaseIdx).toBe(3)
+    expect(s.roundWins).toEqual([1, 0])
+    expect(s.lastRoundWinner).toBe(0)
+    expect(s.players[0].wallet).toBe(3)
+    expect(s.totalFans[0]).toBeGreaterThan(0)
+    expect(r.events).toContainEqual(expect.objectContaining({ type: 'roundWon', winner: 0, roundWins: [1, 0] }))
+  })
+
+  it('next round: +3 to both, +2 comeback to the loser', () => {
+    let s = toPhase(winningStage(shortGame(), 0), 3)
+    s = readyBoth(s)
+    expect(s.round).toBe(2)
+    expect(s.players[0].wallet).toBe(6)
+    expect(s.players[1].wallet).toBe(8)
+  })
+
+  it('a 0-0 round is won by nobody and gives no comeback bonus', () => {
+    let s = toPhase(shortGame(), 3)
+    expect(s.roundWins).toEqual([0, 0])
+    expect(s.lastRoundWinner).toBe('draw')
+    s = readyBoth(s)
+    expect(s.players[0].wallet).toBe(6)
+    expect(s.players[1].wallet).toBe(6)
+  })
+
+  it('first to 3 round wins takes the match', () => {
+    let s = produce(shortGame(), d => { d.roundWins = [2, 0] })
+    s = toPhase(winningStage(s, 0), 3)
+    expect(s.gameOver).toBe(true)
+    expect(s.winner).toBe(0)
+  })
+
+  it('after round 5 the most round wins takes it, then total fans, else draw', () => {
+    const at5 = (wins: [number, number], fans: [number, number]) =>
+      toPhase(produce(shortGame(), d => { d.round = 5; d.roundWins = wins; d.totalFans = fans }), 3)
+    expect(at5([2, 1], [0, 50]).winner).toBe(0)
+    expect(at5([1, 1], [10, 4]).winner).toBe(0)
+    expect(at5([1, 1], [4, 10]).winner).toBe(1)
+    const d = at5([1, 1], [5, 5])
+    expect(d.gameOver).toBe(true)
+    expect(d.winner).toBe('draw')
+  })
+})

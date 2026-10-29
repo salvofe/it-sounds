@@ -224,8 +224,10 @@ function clearStages(p: PlayerState) {
 }
 
 function advancePhase(state: GameState, events: GameEvent[]) {
+  const rules = rulesOf(state)
   for (const p of state.players) {
-    p.ready = false; p.actionsLeft = actionBudget(rulesOf(state), state.round); p.placedThisPhase = []; p.history = []
+    p.ready = false; p.placedThisPhase = []; p.history = []
+    if (rules.actions.kind === 'perPhase') p.actionsLeft = rules.actions.amount
   }
 
   if (currentPhase(state) === 'RESULTS') {
@@ -233,12 +235,15 @@ function advancePhase(state: GameState, events: GameEvent[]) {
     state.phaseIdx = 0
     state.players.forEach((p, i) => {
       const pid = i as PlayerId
-      const gain = Math.min(state.round, 5) + (p.genre === 'Hip-Hop' ? 0.5 : 0)
+      const lost = state.lastRoundWinner !== null && state.lastRoundWinner !== 'draw' && state.lastRoundWinner !== pid
+      const gain = rules.roundIncome(state.round) + (p.genre === 'Hip-Hop' ? rules.hipHopRoundBonus : 0) + (lost ? rules.comebackBonus : 0)
       p.wallet += gain
       events.push({ type: 'income', player: pid, amount: gain })
       clearStages(p)
       if (state.round >= 2) p.unlocked = { s1: true, s2: true, s3: true }
-      draw(state, pid, rulesOf(state).roundDraw, events)
+      p.extraActionsBought = 0
+      p.actionsLeft = actionBudget(rules, state.round)
+      draw(state, pid, rules.roundDraw, events)
     })
     events.push({ type: 'phase', phase: 'ARRANGEMENT', round: state.round })
     return
@@ -247,20 +252,34 @@ function advancePhase(state: GameState, events: GameEvent[]) {
   state.phaseIdx += 1
   const phase = currentPhase(state)
   events.push({ type: 'phase', phase, round: state.round })
+  if (phase !== 'RESULTS') return
 
-  if (phase === 'RESULTS') {
-    const scores = state.players.map(roundScore) as [number, number]
-    state.players.forEach((p, i) => {
-      p.wallet += scores[i]
-      p.lastRoundScore = scores[i]
-      p.bestRound = Math.max(p.bestRound, scores[i])
-    })
-    if (scores.some(x => x >= 20)) {
+  const scores = state.players.map(roundScore) as [number, number]
+  state.players.forEach((p, i) => {
+    if (rules.fansToHype) p.wallet += scores[i]
+    p.lastRoundScore = scores[i]
+    p.bestRound = Math.max(p.bestRound, scores[i])
+    state.totalFans[i] = parseFloat((state.totalFans[i] + scores[i]).toFixed(2))
+  })
+
+  if (rules.win.kind === 'singleRound') {
+    if (scores.some(x => x >= (rules.win as { score: number }).score)) {
       state.gameOver = true
       state.winner = scores[0] === scores[1] ? 'draw' : scores[0] > scores[1] ? 0 : 1
     }
-    events.push({ type: 'results', scores, gameOver: state.gameOver, winner: state.winner })
+  } else {
+    const roundWinner: PlayerId | 'draw' = scores[0] === scores[1] ? 'draw' : scores[0] > scores[1] ? 0 : 1
+    if (roundWinner !== 'draw') state.roundWins[roundWinner] += 1
+    state.lastRoundWinner = roundWinner
+    events.push({ type: 'roundWon', winner: roundWinner, scores, roundWins: [...state.roundWins] as [number, number] })
+    const [w0, w1] = state.roundWins
+    if (Math.max(w0, w1) >= rules.win.wins || state.round >= rules.win.maxRounds) {
+      state.gameOver = true
+      const [f0, f1] = state.totalFans
+      state.winner = w0 !== w1 ? (w0 > w1 ? 0 : 1) : f0 !== f1 ? (f0 > f1 ? 0 : 1) : 'draw'
+    }
   }
+  events.push({ type: 'results', scores, gameOver: state.gameOver, winner: state.winner, roundWins: [...state.roundWins] as [number, number] })
 }
 
 // ── Action handlers ──────────────────────────────────────────────────────────
