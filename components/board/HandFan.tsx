@@ -2,6 +2,7 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import { isPhaseOk, PHASES, cardPhaseLabel } from '@/lib/data'
 import { cardStats } from '@/lib/skins'
+import { handKey, useFx } from '@/lib/fx/runner'
 import { useGameStore } from '@/store/gameStore'
 import Card from './Card'
 import { anchorOf } from './anchor'
@@ -13,6 +14,7 @@ const liftedAnchor = (el: Element) => { const a = anchorOf(el); return { ...a, t
 // Your hand, fanned along the bottom edge. Hover/focus lifts a card and shows its preview.
 export default function HandFan() {
   const { playerHand, selectedCard, phaseIdx, playerGenre, selectCard, trashCard, setPreview } = useGameStore()
+  const hidden = useFx(s => s.hidden)
   const phase = PHASES[phaseIdx] as Phase
   const n = playerHand.length
   // When the hand changes under a resting pointer (a card was played), the neighbour that slides under it
@@ -51,7 +53,7 @@ export default function HandFan() {
           zIndex: selected ? 60 : i,
         } as CSSProperties
         return (
-          <div key={card.id} role="listitem" className={`fan-card${selected ? ' selected' : ''}`} style={style}
+          <div key={card.id} role="listitem" data-card-id={card.id} className={`fan-card${selected ? ' selected' : ''}${hidden[handKey(card.id)] ? ' fx-hidden' : ''}`} style={style}
             onPointerEnter={e => enter(e, card)} onMouseMove={e => move(e, card)}
             onPointerLeave={e => { if (e.pointerType === 'mouse') setPreview(null) }}>
             <div className="fan-card-lift">

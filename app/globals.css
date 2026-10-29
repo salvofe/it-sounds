@@ -399,3 +399,21 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 /* Field card scale: bigger on tall screens, tighter on short ones */
 @media (max-height: 860px) { .board { --fs: 0.86; } }
 @media (min-height: 1000px) { .board { --fs: 1.25; } }
+
+/* ── Animations (lib/fx) ─────────────────────────────────────────────────── */
+.fx-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 90; }
+.flying-card { position: fixed; pointer-events: none; z-index: 95; will-change: transform; }
+.fx-hidden { visibility: hidden; }
+.board.fx-live-hit::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 40;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.35), transparent 70%);
+  animation: fx-flash 700ms ease-out forwards;
+}
+@keyframes fx-flash { from { opacity: 1; } to { opacity: 0; } }
+.board.fx-live-hit .board-lights { animation: fx-sweep 900ms ease-out; }
+@keyframes fx-sweep { 0% { transform: scaleX(0.2); opacity: 0.3; } 60% { transform: scaleX(1.1); opacity: 1; } 100% { transform: none; } }
+.board[data-phase="LIVE SHOW"] .board-lights { filter: brightness(1.3) saturate(1.2); }
+@media (prefers-reduced-motion: reduce) {
+  .board.fx-live-hit .board-lights { animation: none; }
+  .board.fx-live-hit::after { display: none; }
+}

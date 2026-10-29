@@ -8,6 +8,8 @@ import {
 import { Sound } from '@/lib/sound'
 import { Music } from '@/lib/music/player'
 import { mixFor } from '@/lib/music/mix'
+import { buildSteps, resultsOverlayDelay } from '@/lib/fx/queue'
+import { Fx } from '@/lib/fx/runner'
 
 // The rules live in lib/engine (pure, symmetric, server-ready). This store only
 // holds the engine state, exposes it under the names the components read, and
@@ -138,6 +140,10 @@ function project(g: EngineState): Partial<GameState> {
 
 const label = (sk: StageKey) => sk.toUpperCase()
 
+// the results panel waits for the results moment on the table (lib/fx); a new game cancels the wait
+let resultsDelay = 0
+let gameToken = 0
+
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 export const useGameStore = create<GameState & GameActions>()((set, get) => {
@@ -215,7 +221,10 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
         break
       case 'results': {
         const [pt, at] = ev.scores
-        set({ showResults: true })
+        if (resultsDelay > 0) {
+          const token = gameToken
+          setTimeout(() => { if (token === gameToken) set({ showResults: true }) }, resultsDelay)
+        } else set({ showResults: true })
         log(`📊 Results — You: ${pt.toFixed(1)}k | AI: ${at.toFixed(1)}k`)
         if (ev.gameOver) { if (ev.winner === ME) Sound.win(); else if (ev.winner === 'draw') Sound.phase('RESULTS'); else Sound.lose() }
         break
@@ -242,13 +251,18 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   }
 
   function commit(g: EngineState, events: GameEvent[]) {
+    const steps = buildSteps(events, ME)
+    resultsDelay = resultsOverlayDelay(steps)
+    Fx.prepare(steps)   // measure and hide before React shows the new state
     set({ ...project(g), previewCard: null })
     for (const ev of events) handle(ev)
     Music.apply(mixFor(g, ME))
     if (g.gameOver) Music.stop(4000)   // let the results stinger play first
+    Fx.run(steps, { me: get().playerGenre, ai: get().aiGenre })
   }
 
   function dispatch(action: Action): boolean {
+    Fx.skip()   // your move ends the AI's animation sequence
     const g = get().game
     if (!g) return false
     const r = applyAction(g, ME, action)
@@ -287,6 +301,8 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     startGame(playerGenre, playerSubGenre, aiGenre, mode) {
+      Fx.skip()
+      gameToken++
       Music.setMuted(get().soundMuted)
       Music.start()   // unlocks Sound too; idempotent
       const { state } = createGame([
@@ -300,11 +316,14 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     restartGame() {
+      Fx.skip()
+      gameToken++
       Music.stop()
       set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: true, showTutorial: false })
     },
 
     nextPhase() {
+      Fx.skip()
       const g = get().game
       if (!g || g.gameOver) return
       const phase = PHASES[g.phaseIdx]
