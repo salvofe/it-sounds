@@ -2,7 +2,7 @@
 // runs one check per player action and layout requirement, saves screenshots.
 // Usage: npx next build && npm run check:board [-- --only=C1,C2]
 import { spawn, execSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -16,28 +16,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 const killTree = p => { try { if (process.platform === 'win32') execSync(`taskkill /pid ${p.pid} /T /F`, { stdio: 'ignore' }); else p.kill('SIGTERM') } catch {} }
 
 // ── server and browser ──────────────────────────────────────────────────────
-const server = spawn('npx', ['next', 'start', '-p', String(PORT)], { shell: true, stdio: 'ignore' })
 const URL = `http://localhost:${PORT}/?e2e=1`
-for (let i = 0; i < 60; i++) { try { if ((await fetch(URL)).ok) break } catch {} await sleep(500) }
-
-const profile = mkdtempSync(join(tmpdir(), 'board-check-'))
-const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${CDP_PORT}`, '--hide-scrollbars', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })
-let pages = []
-for (let i = 0; i < 50 && !pages.length; i++) {
-  try { pages = (await (await fetch(`http://127.0.0.1:${CDP_PORT}/json`)).json()).filter(t => t.type === 'page') } catch {}
-  await sleep(200)
-}
-const ws = new WebSocket(pages[0].webSocketDebuggerUrl)
-await new Promise(r => (ws.onopen = r))
+let server = null, chrome = null, ws = null, profile = null
 let msgId = 0
 const pending = new Map()
 function send(method, params = {}) {
-  return new Promise(r => { const i = ++msgId; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })) })
-}
-ws.onmessage = m => {
-  const d = JSON.parse(m.data)
-  if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id) }
-  if (d.method === 'Page.javascriptDialogOpening') send('Page.handleJavaScriptDialog', { accept: true })
+  return new Promise((resolve, reject) => {
+    const i = ++msgId
+    const t = setTimeout(() => { pending.delete(i); reject(new Error(`CDP timeout: ${method}`)) }, 15000)
+    pending.set(i, d => { clearTimeout(t); resolve(d) })
+    ws.send(JSON.stringify({ id: i, method, params }))
+  })
 }
 async function js(expr) {
   const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })
@@ -52,6 +41,13 @@ async function shot(name) {
   const r = await send('Page.captureScreenshot', { format: 'png' })
   writeFileSync(join(OUT, `${name}.png`), Buffer.from(r.result.data, 'base64'))
 }
+function cleanup() {
+  try { ws?.close() } catch {}
+  if (chrome) killTree(chrome)
+  if (server) killTree(server)
+  if (profile) { try { rmSync(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 }) } catch {} }
+}
+const watchdog = setTimeout(() => { console.error('watchdog: 10 min exceeded'); cleanup(); process.exit(2) }, 10 * 60 * 1000)
 
 // ── page helpers ────────────────────────────────────────────────────────────
 const S = expr => js(`(() => { const s = window.__itsounds.getState(); return (${expr}) })()`)
@@ -86,7 +82,15 @@ const idxOf = test => S(`s.playerHand.findIndex(c => ${test})`)
 const nextPhase = async () => { await click('next-phase'); await sleep(400) }
 const SMALL = `c.name === 'Small Stage'`
 const ARTIST = `c.type === 'artist'`
-const noVerticalScroll = () => js(`document.documentElement.scrollHeight <= innerHeight + 1 && [...document.querySelectorAll('.zone')].every(z => z.scrollHeight <= z.clientHeight + 1)`)
+const noVerticalScroll = () => js(`(() => {
+  const q = id => document.querySelector('[data-testid="' + id + '"]')
+  const board = q('board'), zones = [...document.querySelectorAll('[data-testid^="zone-"]')]
+  const bottomOk = id => { const el = q(id); return !!el && el.getBoundingClientRect().bottom <= innerHeight + 1 }
+  return document.documentElement.scrollHeight <= innerHeight + 1
+    && !!board && board.scrollHeight <= board.clientHeight + 1
+    && zones.length > 0 && zones.every(z => z.scrollHeight <= z.clientHeight + 1)
+    && bottomOk('center-band') && bottomOk('ticker')
+})()`)
 
 // ── checks ──────────────────────────────────────────────────────────────────
 const CHECKS = {
@@ -138,8 +142,9 @@ const CHECKS = {
       const target = await S(`['s1', 's2', 's3'].find(k => s.aiStages[k].stage)`)
       if (!target || (await idxOf(`c.type === 'attack'`)) < 0) continue
       const before = await S('s.playerHand.length')
+      const focus = await S('s.focusedStage')
       await click(`zone-ai-${target}`)
-      if ((await S('s.playerHand.length')) !== before) return false
+      if ((await S('s.playerHand.length')) !== before || (await S('s.focusedStage')) !== focus) return false
       await clickHandCard(await idxOf(`c.type === 'attack'`))
       if (!(await S('s.targetMode'))) return false
       await click('cancel-attack')
@@ -240,29 +245,69 @@ const CHECKS = {
     return ok
   }],
   L3: ['390 wide: no horizontal page scroll', async () => {
-    await viewport(390, 844)
-    await newGame()
-    await shot('board-390')
-    const ok = await js(`[...document.querySelectorAll('[data-testid]')].every(el => el.closest('.hand-fan') || el.closest('.drawer') || el.getBoundingClientRect().right <= innerWidth + 1)`)
-    await viewport(1440, 900)
-    return ok
+    try {
+      await viewport(390, 844)
+      await newGame()
+      await shot('board-390')
+      return await js(`(() => {
+        const drawer = document.querySelector('[data-testid="drawer"]')
+        return !!document.querySelector('[data-testid="board"]')
+          && document.documentElement.scrollWidth <= innerWidth + 1
+          && document.body.scrollWidth <= innerWidth + 1
+          && !(drawer && drawer.classList.contains('open'))
+          && [...document.querySelectorAll('[data-testid]')].every(el => el.closest('.hand-fan') || el.closest('.drawer') || el.getBoundingClientRect().right <= innerWidth + 1)
+      })()`)
+    } finally {
+      await viewport(1440, 900)
+    }
   }],
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
-await send('Page.enable'); await send('Runtime.enable')
-await viewport(1440, 900)
-await send('Page.navigate', { url: URL })
-for (let i = 0; i < 40; i++) { if (await js('!!window.__itsounds').catch(() => false)) break; await sleep(250) }
-
 let failed = 0
-for (const [id, [name, fn]] of Object.entries(CHECKS)) {
-  if (only.length && !only.includes(id)) continue
-  let pass = false, detail = ''
-  try { pass = await fn() } catch (e) { detail = e.message }
-  if (!pass) failed++
-  console.log(`${pass ? 'PASS' : 'FAIL'}  ${id.padEnd(4)} ${name}${detail ? `  (${detail})` : ''}`)
+try {
+  let stale = false
+  try { await fetch(`http://localhost:${PORT}/`); stale = true } catch {}
+  if (stale) throw new Error(`port ${PORT} already answers (stale server?); stop it first`)
+  server = spawn('npx', ['next', 'start', '-p', String(PORT)], { shell: true, stdio: 'ignore' })
+  let up = false
+  for (let i = 0; i < 60 && !up; i++) { try { up = (await fetch(URL)).ok } catch {} if (!up) await sleep(500) }
+  if (!up) throw new Error('next start did not come up (did you run next build?)')
+
+  profile = mkdtempSync(join(tmpdir(), 'board-check-'))
+  chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${CDP_PORT}`, '--hide-scrollbars', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })
+  let pages = []
+  for (let i = 0; i < 50 && !pages.length; i++) {
+    try { pages = (await (await fetch(`http://127.0.0.1:${CDP_PORT}/json`)).json()).filter(t => t.type === 'page') } catch {}
+    if (!pages.length) await sleep(200)
+  }
+  if (!pages.length) throw new Error(`Chrome page target never appeared on port ${CDP_PORT} (CHROME_PATH=${CHROME})`)
+  ws = new WebSocket(pages[0].webSocketDebuggerUrl)
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('CDP websocket error')) })
+  ws.onmessage = m => {
+    const d = JSON.parse(m.data)
+    if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id) }
+    if (d.method === 'Page.javascriptDialogOpening') send('Page.handleJavaScriptDialog', { accept: true }).catch(() => {})
+  }
+
+  await send('Page.enable'); await send('Runtime.enable')
+  await viewport(1440, 900)
+  await send('Page.navigate', { url: URL })
+  for (let i = 0; i < 40; i++) { if (await js('!!window.__itsounds').catch(() => false)) break; await sleep(250) }
+
+  for (const [id, [name, fn]] of Object.entries(CHECKS)) {
+    if (only.length && !only.includes(id)) continue
+    let pass = false, detail = ''
+    try { pass = await fn() } catch (e) { detail = e.message }
+    if (!pass) failed++
+    console.log(`${pass ? 'PASS' : 'FAIL'}  ${id.padEnd(4)} ${name}${detail ? `  (${detail})` : ''}`)
+  }
+  console.log(`screenshots: ${OUT}`)
+} catch (e) {
+  console.error('board-check error:', e.message)
+  failed = failed || 1
+} finally {
+  clearTimeout(watchdog)
+  cleanup()
 }
-console.log(`screenshots: ${OUT}`)
-ws.close(); killTree(chrome); killTree(server)
 process.exit(failed ? 1 : 0)
