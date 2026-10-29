@@ -4,6 +4,10 @@ import { TEMPLATES } from '@/lib/data'
 import type { Card } from '@/types/game'
 import { applyAction, createGame, playBotPhase, viewFor, type Action, type GameState, type PlayerId } from './index'
 import { scoreStage, emptyStage } from './rules'
+import { RULES } from './config'
+
+const SHOP = RULES.short.shop!
+const BUDGET = (RULES.short.actions as { byRound: number[] }).byRound // actions per round, rounds 1-4
 
 const T = (name: string, id: number): Card => {
   const t = TEMPLATES.find(x => x.name === name)
@@ -242,7 +246,7 @@ describe('modes', () => {
     expect(s.totalFans).toEqual([0, 0])
     expect(s.lastRoundWinner).toBeNull()
     expect(s.players[0].wallet).toBe(3)
-    expect(s.players[0].actionsLeft).toBe(7)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0])
     expect(s.players[0].extraActionsBought).toBe(0)
     expect(s.players[0].unlocked).toEqual({ s1: true, s2: true, s3: true })
   })
@@ -279,24 +283,24 @@ describe('short mode: actions', () => {
   it('one budget for the whole round, not refilled per phase', () => {
     let s = hand(shortGame(), 0, [T('Small Stage', 900)])
     s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
-    expect(s.players[0].actionsLeft).toBe(6)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0] - 1)
     s = readyBoth(s)
     expect(s.phaseIdx).toBe(1)
-    expect(s.players[0].actionsLeft).toBe(6)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0] - 1)
   })
 
-  it('budget grows 7, 8, 9, 10 and unspent actions are lost', () => {
+  it('budget grows by round and unspent actions are lost', () => {
     let s = shortGame()
     const seen: number[] = []
     for (let r = 1; r <= 4; r++) { seen.push(s.players[0].actionsLeft); s = toPhase(s, 3); s = readyBoth(s) }
-    expect(seen).toEqual([7, 8, 9, 10])
+    expect(seen).toEqual(BUDGET)
   })
 
   it('picking a card back up never goes above the budget', () => {
     let s = hand(shortGame(), 0, [T('Small Stage', 900)])
     s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
     s = ok(s, 0, { type: 'pickup', sk: 's1', slot: 'stage' }).state
-    expect(s.players[0].actionsLeft).toBe(7)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0])
   })
 
   it('mulligan keeps the short-mode starting Hype and budget', () => {
@@ -304,7 +308,7 @@ describe('short mode: actions', () => {
     s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
     s = ok(s, 0, { type: 'mulligan' }).state
     expect(s.players[0].wallet).toBe(3.5)
-    expect(s.players[0].actionsLeft).toBe(7)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0])
   })
 })
 
@@ -406,7 +410,7 @@ describe('hype shop', () => {
   it('buyAction: +1 action for 3 Hype, no action spent, max 2 per round', () => {
     let s = ok(shortGame(), 0, { type: 'buyAction' }).state
     expect(s.players[0].wallet).toBe(0)
-    expect(s.players[0].actionsLeft).toBe(8)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0] + 1)
     s = rich(s)
     s = ok(s, 0, { type: 'buyAction' }).state
     expect(err(s, 0, { type: 'buyAction' })).toMatch(/Max 2/)
@@ -422,18 +426,18 @@ describe('hype shop', () => {
     s = ok(s, 0, { type: 'buyAction' }).state
     s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
     s = ok(s, 0, { type: 'pickup', sk: 's1', slot: 'stage' }).state
-    expect(s.players[0].actionsLeft).toBe(8)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0] + 1)
   })
 
-  it('buyDraw: 2 Hype + 1 action for 2 cards', () => {
+  it('buyDraw: costs Hype + 1 action for 2 cards', () => {
     const s0 = shortGame()
     const s = ok(s0, 0, { type: 'buyDraw' }).state
     expect(s.players[0].hand).toHaveLength(s0.players[0].hand.length + 2)
-    expect(s.players[0].wallet).toBe(1)
-    expect(s.players[0].actionsLeft).toBe(6)
+    expect(s.players[0].wallet).toBe(3 - SHOP.draw.cost)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0] - 1)
   })
 
-  it('boost: only in Live Show, needs an artist, +1k per 2 Hype, max +3k per stage', () => {
+  it('boost: only in Live Show, needs an artist, +1k per boost, max +3k per stage', () => {
     let s = rich(stageWithArtist(shortGame()))
     expect(err(s, 0, { type: 'boost', sk: 's1' })).toMatch(/Live Show/)
     s = toPhase(s, 2)
@@ -441,7 +445,7 @@ describe('hype shop', () => {
     for (let i = 0; i < 3; i++) s = ok(s, 0, { type: 'boost', sk: 's1' }).state
     expect(s.players[0].stages.s1.boost).toBe(3)
     expect(s.players[0].stages.s1.current).toBe(3)
-    expect(s.players[0].wallet).toBe(14)
+    expect(s.players[0].wallet).toBe(20 - 3 * SHOP.boost.cost)
     expect(err(s, 0, { type: 'boost', sk: 's1' })).toMatch(/\+3k/)
   })
 
@@ -451,7 +455,7 @@ describe('hype shop', () => {
     s = toPhase(s, 1)
     s = ok(s, 0, { type: 'upgrade', sk: 's1', kind: 'threshold' }).state
     expect(s.players[0].stages.s1.threshold).toBe(0.5) // 1.5 - 1, and never below 0.5
-    expect(s.players[0].wallet).toBe(16)
+    expect(s.players[0].wallet).toBe(20 - SHOP.upgrade.cost)
     expect(err(s, 0, { type: 'upgrade', sk: 's1', kind: 'mult' })).toMatch(/already upgraded/)
   })
 

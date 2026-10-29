@@ -7,8 +7,8 @@ import type { Action, GameEvent, GameState, PlayerId, PlayerState } from './type
 // cheat. Each step it tries every legal action and keeps the one that improves
 // its position the most, until nothing helps or it runs out of actions.
 
-function potential(p: PlayerState): number {
-  let v = p.wallet * 0.25 + p.hand.length * 0.2
+function potential(p: PlayerState, walletWeight: number): number {
+  let v = p.wallet * walletWeight + p.hand.length * 0.2
   for (const k of STAGE_KEYS) {
     const s = p.stages[k]
     if (!s.stage) continue
@@ -29,12 +29,17 @@ function potential(p: PlayerState): number {
 }
 
 function evaluate(state: GameState, pid: PlayerId): number {
-  let v = potential(state.players[pid]) - 0.8 * potential(state.players[1 - pid])
+  // short mode: Hype is worth more, so it isn't all spent on draws before the Live Show
+  const w = RULES[state.mode].win.kind === 'bestOf' ? 0.45 : 0.25
+  let v = potential(state.players[pid], w) - 0.8 * potential(state.players[1 - pid], w)
   // short mode: winning this round is what counts
   if (RULES[state.mode].win.kind === 'bestOf') {
     const mine = roundScore(state.players[pid]), theirs = roundScore(state.players[1 - pid])
     if (mine > theirs) v += 6
     else if (theirs > mine) v -= 6
+    // closing a small gap is worth something, so a boost can be a step towards winning;
+    // gaps beyond 3k (the most a boost can add on one stage) are lost causes and add nothing
+    v += 2 * Math.max(-3, Math.min(3, mine - theirs))
   }
   return v
 }

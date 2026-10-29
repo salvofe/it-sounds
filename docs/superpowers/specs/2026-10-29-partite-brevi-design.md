@@ -35,8 +35,8 @@ Musica dei palchi, animazioni, multiplayer. Carte, combo, generi e skin non camb
 - I palchi s1, s2, s3 sono sbloccati dal round 1.
 
 ### Azioni
-- Un **budget unico per round**, spendibile in qualsiasi fase: 7 al round 1, 8 al round 2,
-  9 al round 3, 10 dal round 4. Le azioni non spese non passano al round dopo.
+- Un **budget unico per round**, spendibile in qualsiasi fase: 8 al round 1, 9 al round 2,
+  10 al round 3, 11 dal round 4. Le azioni non spese non passano al round dopo.
 - Cosa costa un'azione: come oggi (piazzare, difese, attacchi, carte pesca), più pescare e
   potenziare con l'Hype e il boost (sotto). Comprare un'azione extra non costa azioni.
 - Riprendere in mano una carta piazzata in questa fase restituisce l'azione, come oggi.
@@ -45,14 +45,14 @@ Musica dei palchi, animazioni, multiplayer. Carte, combo, generi e skin non camb
 - **Entrate**: +3 a ogni giocatore all'inizio di ogni round (incluso il primo); sponsor come
   oggi (genere Hip-Hop +1); **+2 a chi ha perso il round precedente** (non in caso di parità).
   I fan del round **non** diventano Hype. Il bonus Hip-Hop "+0.5 per round" resta.
-- **Spese** (valori iniziali, da tarare col simulatore):
+- **Spese** (valori tarati col simulatore):
 
 | Spesa | Costo | Costa un'azione | Quando | Limite |
 |---|---|---|---|---|
 | Azione extra | 3 Hype | no | qualsiasi fase | 2 per round |
-| Pesca 2 carte | 2 Hype | sì | qualsiasi fase | nessuno |
-| Boost | 2 Hype → +1k fan su un tuo palco con stage e almeno un artista | sì | solo Live Show | +3k per palco a round |
-| Potenziamento | 4 Hype → soglia −1k (min 0,5k) **oppure** moltiplicatore +1 | sì | Soundcheck o Live Show | 1 per palco a round |
+| Pesca 2 carte | 3 Hype | sì | qualsiasi fase | nessuno |
+| Boost | 1 Hype → +1k fan su un tuo palco con stage e almeno un artista | sì | solo Live Show | +3k per palco a round |
+| Potenziamento | 3 Hype → soglia −1k (min 0,5k) **oppure** moltiplicatore +1 | sì | Soundcheck o Live Show | 1 per palco a round |
 
 - Il costo degli stage resta pagato in Hype come oggi.
 
@@ -102,8 +102,8 @@ s2/s3 dal round 2, nessuna spesa di Hype tranne gli stage, nessuna delle quattro
 - **RaceTracker**: in Breve mostra i round vinti (●●○ contro ●○○) e il numero del round su 5;
   in Classica resta la corsa ai 20k.
 - **PhaseBar**: in Breve le azioni mostrano il budget del round.
-- **Spese di Hype**: fila di pulsanti sotto la mano ("+1 AZIONE · 3", "PESCA 2 · 2"); sui palchi
-  "BOOST +1k · 2" (solo Live Show) e "POTENZIA · 4" con scelta soglia/moltiplicatore. I pulsanti
+- **Spese di Hype**: fila di pulsanti sotto la mano ("+1 AZIONE · 3", "PESCA 2 · 3"); sui palchi
+  "BOOST +1k · 1" (solo Live Show) e "POTENZIA · 3" con scelta soglia/moltiplicatore. I pulsanti
   non disponibili sono disattivati con il motivo come tooltip/etichetta accessibile.
 - **Fine round**: il pannello risultati mostra chi ha vinto il round e il conteggio; a fine
   partita il vincitore.
@@ -121,3 +121,20 @@ s2/s3 dal round 2, nessuna spesa di Hype tranne gli stage, nessuna delle quattro
   rotazione), stampa durata media, % partite al 5° round, % rimonte da 0-2, uso di ogni spesa,
   % vittorie del primo giocatore. I prezzi delle spese si ritoccano finché gli obiettivi della
   sezione Obiettivo sono raggiunti; i valori finali aggiornano la tabella di questa spec.
+
+### Risultato finale della taratura (300 partite, 62.9s)
+
+```
+FAIL  avg rounds (target 3.5-4.5)              4.58
+PASS  games reaching round 5 (target >=25%)    69.0%
+PASS  games using buyAction (target >=20%)     51.3%
+PASS  games using buyDraw (target >=20%)       100.0%
+PASS  games using boost (target >=20%)         20.3%
+PASS  games using upgrade (target >=20%)       80.3%
+PASS  comebacks from 0-2                       6.7%
+PASS  first player wins                        50.0%
+PASS  draws                                    0.0%
+```
+
+Obiettivo non raggiunto: durata media 4.58 round contro 4.5 massimo (budget 6 tarature
+esaurito; vedi il report del task 6).

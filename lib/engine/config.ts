@@ -40,7 +40,7 @@ export const RULES: Record<Mode, Rules> = {
     shop: null,
   },
   short: {
-    actions: { kind: 'perRound', byRound: [7, 8, 9, 10] },
+    actions: { kind: 'perRound', byRound: [8, 9, 10, 11] },
     win: { kind: 'bestOf', wins: 3, maxRounds: 5 },
     roundIncome: () => 3,
     incomeOnFirstRound: true,
@@ -52,9 +52,9 @@ export const RULES: Record<Mode, Rules> = {
     roundDraw: 7,
     shop: {
       extraAction: { cost: 3, maxPerRound: 2 },
-      draw: { cost: 2, cards: 2 },
-      boost: { cost: 2, amount: 1, maxPerStage: 3 },
-      upgrade: { cost: 4, thresholdCut: 1, minThreshold: 0.5, multBonus: 1 },
+      draw: { cost: 3, cards: 2 },
+      boost: { cost: 1, amount: 1, maxPerStage: 3 },
+      upgrade: { cost: 3, thresholdCut: 1, minThreshold: 0.5, multBonus: 1 },
     },
   },
 }
