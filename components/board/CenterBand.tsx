@@ -30,7 +30,7 @@ export default function CenterBand() {
 
   return (
     <div className="band" data-testid="center-band">
-      <div className="band-row">
+      <div className="band-row band-row-info">
         <span className="band-round" data-testid="round-info">
           {st.mode === 'short'
             ? <>ROUND {st.round}/{maxRounds}<span className="band-pips">YOU {pips(st.roundWins[0])} · AI {pips(st.roundWins[1])}</span></>
@@ -46,6 +46,9 @@ export default function CenterBand() {
         <span className="band-stat num" data-testid="actions-left">ACTIONS {st.actionsLeft}/{st.maxActions}</span>
         <span className="band-stat num">HYPE {st.playerWallet.toFixed(1)}k</span>
         {st.mustDiscard > 0 && <span className="band-warn">DISCARD {st.mustDiscard}</span>}
+        <p className="band-ticker" data-testid="ticker" aria-live="polite">{lastLog}</p>
+      </div>
+      <div className="band-row band-row-actions">
         <div className="band-buttons">
           {shop && phase !== 'RESULTS' && (
             <>
@@ -75,7 +78,6 @@ export default function CenterBand() {
             onClick={() => { if (confirm('Restart? Progress will be lost.')) st.restartGame() }}>↺</button>
         </div>
       </div>
-      <p className="band-ticker" data-testid="ticker" aria-live="polite">{lastLog}</p>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 'use client'
-import type { CSSProperties } from 'react'
+import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react'
 import { isPhaseOk, PHASES, cardPhaseLabel } from '@/lib/data'
 import { cardStats } from '@/lib/skins'
 import { useGameStore } from '@/store/gameStore'
@@ -15,8 +15,29 @@ export default function HandFan() {
   const { playerHand, selectedCard, phaseIdx, playerGenre, selectCard, trashCard, setPreview } = useGameStore()
   const phase = PHASES[phaseIdx] as Phase
   const n = playerHand.length
+  // When the hand changes under a resting pointer (a card was played), the neighbour that slides under it
+  // must not pop up a preview until the pointer actually moves.
+  const still = useRef(false)
+  const pointer = useRef<{ x: number; y: number } | null>(null)
+  const prevIds = useRef<Set<string | number>>(new Set())
+  useEffect(() => {
+    const ids = new Set<string | number>(playerHand.map(c => c.id))
+    // only when cards left the hand (played, discarded): a fresh deal is not "the hand moved under the pointer"
+    if (prevIds.current.size > ids.size && [...ids].every(id => prevIds.current.has(id))) still.current = true
+    prevIds.current = ids
+  }, [playerHand])
+  const enter = (e: MouseEvent<HTMLElement>, card: (typeof playerHand)[number]) => {
+    if (!still.current) setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })
+  }
+  const move = (e: MouseEvent<HTMLElement>, card: (typeof playerHand)[number]) => {
+    const p = pointer.current
+    pointer.current = { x: e.clientX, y: e.clientY }
+    if (!still.current || (p && p.x === e.clientX && p.y === e.clientY)) return
+    still.current = false
+    setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })
+  }
   if (!n) return <div className="hand-empty">Hand is empty — advance to the next round to draw.</div>
-  const overlap = n > 9 ? -112 : n > 6 ? -84 : -50
+  const overlap = n > 9 ? -112 : n > 6 ? -96 : -50
   const mid = (n - 1) / 2
   return (
     <div className="hand-fan" role="list" aria-label="Your hand">
@@ -31,7 +52,7 @@ export default function HandFan() {
         } as CSSProperties
         return (
           <div key={card.id} role="listitem" className={`fan-card${selected ? ' selected' : ''}`} style={style}
-            onMouseEnter={e => setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })}
+            onMouseEnter={e => enter(e, card)} onMouseMove={e => move(e, card)}
             onMouseLeave={() => setPreview(null)}>
             <div className="fan-card-lift">
             <button type="button" data-testid="hand-card" className={`hand-card-btn game-card${selected ? ' selected' : ''}`}

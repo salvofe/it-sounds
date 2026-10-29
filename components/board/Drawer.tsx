@@ -9,7 +9,7 @@ import type { Card, Phase } from '@/types/game'
 function ComboList() {
   const { discovered } = useGameStore()
   return (
-    <div style={{ fontSize: 18 }}>
+    <div style={{ fontSize: 20, lineHeight: 1.15 }}>
       {COMBOS.map(c => {
         const found = !!discovered[c.id]
         const fx = c.mult > 1 ? `×${c.mult}` : `+${c.bonus}k`
@@ -19,7 +19,7 @@ function ComboList() {
               <span style={{ color: found ? 'var(--yel)' : 'var(--muted)' }}>{found ? c.name : '??? COMBO'}</span>
               <span style={{ color: found ? 'var(--grn)' : 'var(--muted)', flexShrink: 0 }}>{found ? fx : '???'}</span>
             </div>
-            {found && <div style={{ fontSize: 16, color: 'var(--muted)', marginBottom: 3 }}>{c.desc}</div>}
+            {found && <div style={{ fontSize: 20, lineHeight: 1.1, color: '#b4bdd4', marginBottom: 4 }}>{c.desc}</div>}
           </div>
         )
       })}
@@ -47,7 +47,7 @@ function CardDatabase() {
       </div>
       {open && (
         <div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 18 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 20 }}>
             <thead>
               <tr>
                 {['IMG', 'NAME', 'TYPE', 'EFFECT'].map(h => (
@@ -67,9 +67,9 @@ function CardDatabase() {
                       dangerouslySetInnerHTML={{ __html: getSprite(c as Card) }}
                     />
                   </td>
-                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: '#fff', fontFamily: "'Press Start 2P',monospace", fontSize: 10, verticalAlign: 'middle' }}>{c.name}</td>
-                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--yel)', fontSize: 17, verticalAlign: 'middle' }}>{c.type}</td>
-                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--muted)', fontSize: 17, verticalAlign: 'middle' }}>{c.desc}</td>
+                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: '#fff', fontSize: 20, lineHeight: 1.05, verticalAlign: 'middle' }}>{c.name}</td>
+                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--yel)', fontSize: 20, lineHeight: 1.05, verticalAlign: 'middle' }}>{c.type}</td>
+                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: '#b4bdd4', fontSize: 20, lineHeight: 1.05, verticalAlign: 'middle' }}>{c.desc}</td>
                 </tr>
               ))}
             </tbody>

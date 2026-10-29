@@ -27,7 +27,7 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
     st.setFocus(sk)
   }
   const name = owner === 'me' ? sk.toUpperCase() : `AI ${sk.toUpperCase()}`
-  const score = s.threshold > 0 ? `${s.current.toFixed(1)}k / ${s.threshold.toFixed(1)}k${passes ? ' ✓' : ''}${s.bonus > 0 ? ` (+${s.bonus}k bonus)` : ''}${s.boost > 0 ? ` (+${s.boost}k boost)` : ''}`
+  const score = s.threshold > 0 ? `${s.current.toFixed(1)}k / ${s.threshold.toFixed(1)}k${passes ? ' ✓' : ''}${s.bonus > 0 ? ` +${s.bonus}k bonus` : ''}${s.boost > 0 ? ` +${s.boost}k boost` : ''}`
     : locked ? 'Opens in round 2' : owner === 'me' ? 'Drop a STAGE here' : 'Empty'
   const headLabel = owner === 'ai'
     ? (target ? `Attack ${name}` : `${name}, ${score}`)
@@ -42,7 +42,7 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
         <span className="zone-label">{name}{focused ? ' · FOCUS' : ''}</span>
         {s.protected && <span className="zone-shield">SHIELD</span>}
         {owner === 'me' && s.decoy && !s.protected && <span className="zone-shield zone-decoy">DECOY</span>}
-        <span className="zone-score num">{score}</span>
+        <span className="zone-score num" title={score}>{score}</span>
       </button>
       <div className="zone-cards">
         {cards.map(({ sl, card }) => (
