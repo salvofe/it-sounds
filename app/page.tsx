@@ -18,6 +18,13 @@ import ComboReveal from '@/components/overlays/ComboReveal'
 export default function GamePage() {
   const { isStarted, targetMode } = useGameStore()
 
+  // test hook: board-check.mjs drives the store through window.__itsounds (only with ?e2e=1)
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has('e2e')) {
+      (window as unknown as { __itsounds?: typeof useGameStore }).__itsounds = useGameStore
+    }
+  }, [])
+
   return (
     <>
       {/* ── Overlays ── */}
