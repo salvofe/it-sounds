@@ -36,7 +36,7 @@ export default function Hand() {
           <button className="btn btn-y" onClick={mulligan}>MULLIGAN</button>
         )}
         <button className="btn btn-x" onClick={undo}>↩ UNDO</button>
-        <button className="btn btn-g" style={{ fontSize: 12, padding: '8px 16px' }} onClick={nextPhase}>
+        <button data-testid="next-phase" className="btn btn-g" style={{ fontSize: 12, padding: '8px 16px' }} onClick={nextPhase}>
           {NEXT_LABELS[phase]}
         </button>
         {targetMode && (

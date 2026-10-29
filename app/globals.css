@@ -324,3 +324,72 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 .card-preview { position: fixed; z-index: 400; pointer-events: none; filter: drop-shadow(0 12px 30px rgba(0,0,0,0.75)); }
 
 @media (prefers-reduced-motion: reduce) { .fan-card-lift { transition: none; } }
+
+/* ── Board (card table) ───────────────────────────────────────────────────── */
+.board {
+  position: relative; height: 100dvh; min-height: 640px; box-sizing: border-box; overflow: hidden;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) clamp(190px, 27vh, 250px);
+  gap: 8px; padding: 10px 16px 0;
+  background: radial-gradient(ellipse at 50% 45%, #1d1233 0%, #120b22 55%, #07050f 100%);
+}
+.board-lights { position: absolute; inset: -40px 0 auto 0; height: 320px; pointer-events: none; }
+.board-field { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; min-height: 0; padding: 0 clamp(0px, 4vw, 90px); }
+.board-center { min-width: 0; }
+
+.side { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 0; }
+.side-me { align-items: end; }
+.side-badge { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 2px solid; border-radius: 12px; background: rgba(7,5,15,0.85); min-width: 0; }
+.side-me .side-badge { margin-bottom: 14px; }
+.side-name { font-family: 'Press Start 2P', monospace; font-size: 11px; line-height: 1.6; }
+.side-line { font-size: 20px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-bonus { color: #b4bdd4; }
+.side-comment { color: #ff88cc; font-style: italic; }
+.side-center { min-width: 0; height: 100%; display: flex; justify-content: center; align-items: flex-end; }
+.side-ai .side-center { align-items: center; }
+.side-piles { display: flex; gap: 10px; }
+.side-me .side-piles { margin-bottom: 14px; }
+.pile {
+  width: 64px; height: 88px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 2px solid; border-radius: 8px; font-size: 18px;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 6px, transparent 6px 12px), #0b0816;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.5), 6px 6px 0 rgba(0,0,0,0.3);
+}
+.pile-trash { background: #0b0816; }
+.pile-n { font-size: 26px; }
+.opp-hand { display: flex; justify-content: center; padding-top: 4px; }
+.card-back { display: inline-block; width: 46px; height: 64px; border-radius: 6px; border: 2px solid #111; box-shadow: 0 0 0 2px rgba(255,255,255,0.8); }
+
+.zone {
+  position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 0; padding: 8px;
+  border-radius: 14px; border: 2px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03);
+  cursor: pointer; transition: border-color 120ms, background 120ms;
+}
+.zone-me.focused { border-style: solid; border-color: var(--yel); background: rgba(255,238,0,0.05); }
+.zone.passes { background: rgba(0,255,102,0.06); }
+.zone.target { border-style: solid; border-color: var(--red); box-shadow: 0 0 14px rgba(255,34,68,0.45); cursor: crosshair; }
+.zone.locked { opacity: 0.45; cursor: not-allowed; }
+.zone-ai:not(.target) { cursor: default; }
+.zone-head { all: unset; display: flex; align-items: center; gap: 8px; cursor: inherit; }
+.zone-head:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
+.zone-label { font-family: 'Press Start 2P', monospace; font-size: 11px; line-height: 1.6; color: var(--yel); }
+.zone-ai .zone-label { color: #ffb27a; }
+.zone-score { margin-left: auto; font-size: 20px; }
+.zone.passes .zone-score { color: var(--grn); }
+.zone-shield { font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 3px 5px; border: 1px solid var(--grn); color: var(--grn); }
+.zone-cards { display: flex; align-items: flex-start; min-height: 136px; padding-left: 2px; }
+.field-slot { position: relative; flex: 0 1 88px; min-width: 22px; height: 136px; }
+.field-slot:nth-child(odd) .field-card-inner { rotate: -1.5deg; }
+.field-slot:nth-child(even) .field-card-inner { rotate: 1.5deg; }
+.field-slot:hover, .field-slot:focus-within { z-index: 20; }
+.field-slot.moving .card-face { outline: 3px solid var(--cyan); }
+.field-card-inner { position: absolute; left: 0; top: 0; width: 88px; transition: transform 120ms; }
+.field-slot:hover .field-card-inner { transform: translateY(-6px); }
+.field-actions { position: absolute; left: 4px; bottom: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity 120ms; z-index: 2; }
+.field-slot:hover .field-actions, .field-slot:focus-within .field-actions { opacity: 1; }
+@media (hover: none) { .field-actions { opacity: 1; } }
+.field-actions button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--cyan); background: #07050f; color: var(--cyan); font-size: 15px; cursor: pointer; }
+.field-actions button:last-child { border-color: var(--red); color: var(--red); }
+.zone-combos { font-family: 'Press Start 2P', monospace; font-size: 9px; line-height: 1.6; color: var(--yel); }
+.zone-shop { display: flex; gap: 4px; flex-wrap: wrap; }
+.zone-shop .btn { font-size: 10px; padding: 6px; flex: 1; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }

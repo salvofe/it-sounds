@@ -81,6 +81,7 @@ export interface GameActions {
   trashCard(idx: number): void
   startMove(sk: StageKey, sl: StageSlot): void
   tryMoveDrop(sk: StageKey, sl: StageSlot): boolean
+  dropOnStage(sk: StageKey): boolean
   undo(): void; mulligan(): void; closeResults(): void
   setFocus(sk: StageKey): void; toggleSound(): void
   addLog(msg: string): void; setCommentary(txt: string): void
@@ -366,6 +367,17 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       if (moveMode.sk === sk && moveMode.sl === sl) { log('Move cancelled'); return true }
       dispatch({ type: 'move', from: { sk: moveMode.sk, slot: moveMode.sl }, to: { sk, slot: sl } })
       return true
+    },
+
+    // board: a stage zone was clicked while a card is being moved → first free slot of the same kind
+    dropOnStage(sk) {
+      const { moveMode, playerStages } = get()
+      if (!moveMode) return false
+      const from = moveMode.sl
+      const kind: StageSlot[] = from.startsWith('artist') ? ['artist1', 'artist2', 'artist3']
+        : from.startsWith('track') ? ['track', 'track2', 'track3'] : [from]
+      const slot = kind.find(k => !playerStages[sk][k]) ?? kind[0]
+      return get().tryMoveDrop(sk, slot)
     },
 
     undo() { dispatch({ type: 'undo' }) },
