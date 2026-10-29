@@ -1,4 +1,5 @@
 import type { Card, Combo, GenreDef, SpriteDef, Phase } from '@/types/game'
+import { sprite32Svg } from '@/lib/sprites'
 
 // ── Sub-genres ───────────────────────────────────────────────────────────────
 
@@ -246,8 +247,9 @@ export function getSprite(card: { name: string } | null | undefined): string {
   if (!card) return ''
   const name = card.name
   if (spriteCache.has(name)) return spriteCache.get(name)!
+  // 32×32 art first (lib/sprites), the old 10×10 grids as fallback
   const def = RAW_SPRITES[name] ?? FALLBACK_SPRITE
-  const svg = px(def.g, def.p)
+  const svg = sprite32Svg(name) ?? px(def.g, def.p)
   spriteCache.set(name, svg)
   return svg
 }

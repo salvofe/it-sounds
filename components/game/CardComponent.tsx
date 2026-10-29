@@ -60,7 +60,7 @@ export default function CardComponent({ card, index, selected, phase }: Props) {
 
         {/* 2 · art */}
         <div style={{ ...st.art, position: 'relative', overflow: 'hidden', height: 92, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className={anim(card)} style={{ ...st.sprite, width: 68, height: 68 }} aria-hidden="true"
+          <div className={anim(card)} style={{ ...st.sprite, width: 80, height: 80 }} aria-hidden="true"
             dangerouslySetInnerHTML={{ __html: getSprite(card) }}
           />
           {st.holo && <div className="holo" aria-hidden="true" />}
