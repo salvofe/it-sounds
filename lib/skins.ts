@@ -61,7 +61,8 @@ const ATTACK_SHORT: Record<string, [string, string]> = {
 // the two stat texts every card shows: short (top-right badge) and long (footer)
 export function cardStats(c: Card): { main: string; long: string } {
   switch (c.type) {
-    case 'stage': return { main: `${c.threshold}k`, long: `NEEDS ${c.threshold}k · COST ${c.cost}k` }
+    // badge = fans needed; footer = what it costs to play
+    case 'stage': return { main: `${c.threshold}k`, long: c.cost ? `COST ${c.cost}k HYPE` : 'FREE TO PLAY' }
     case 'artist': return { main: `${c.talent}`, long: `TALENT ${c.talent}` }
     case 'track': return { main: `+${c.power}`, long: `POWER +${c.power}k` }
     case 'hardware': return { main: `×${c.multiplier}`, long: `MULTIPLIER ×${c.multiplier}` }
@@ -104,14 +105,14 @@ export function cardStyles(s: Skin): CardStyles {
   if (s.family === 'neon') {
     return {
       card: { borderRadius: 12, border: `3px solid ${s.main}`, background: `linear-gradient(180deg, rgba(${s.rgb},0.16), ${s.bg} 45%)`, boxShadow: `0 0 20px rgba(${s.rgb},0.4)` },
-      chip: { fontFamily: "'Press Start 2P', monospace", fontSize: 9, padding: '5px 6px', borderRadius: 4, background: s.main, color: '#07071a' },
+      chip: { fontFamily: "'Press Start 2P', monospace", fontSize: 10, padding: '5px 6px', borderRadius: 4, background: s.main, color: '#07071a' },
       badge: { width: 44, height: 44, borderRadius: '50%', background: '#07071a', color: s.alt, border: `3px solid ${s.alt}`, boxShadow: `0 0 10px ${s.alt}` },
       badgeText: { fontFamily: "'Press Start 2P', monospace", fontSize: 10 },
       art: { borderRadius: 8, background: `radial-gradient(circle at 50% 45%, rgba(${s.rgb},0.38), #05051a 70%)`, border: `1px solid rgba(${s.rgb},0.55)` },
       sprite: { filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.35))' },
-      name: { fontFamily: "'Press Start 2P', monospace", fontSize: 10, lineHeight: 1.5, color: '#ffffff' },
-      desc: { fontFamily: "'VT323', monospace", fontSize: 18, lineHeight: 1.05, color: '#c4c8e8' },
-      foot: { fontFamily: "'VT323', monospace", fontSize: 17, color: s.main },
+      name: { fontFamily: "'Press Start 2P', monospace", fontSize: 11, lineHeight: 1.6, color: '#ffffff' },
+      desc: { fontFamily: "'VT323', monospace", fontSize: 20, lineHeight: 1.05, color: '#dfe2f7' },
+      foot: { fontFamily: "'VT323', monospace", fontSize: 20, color: s.main },
       bonus: { fontFamily: "'Press Start 2P', monospace", fontSize: 8, padding: '4px 5px', borderRadius: 4, background: '#ffee00', color: '#07071a', boxShadow: '0 0 8px #ffee00' },
       holo: true,
     }
@@ -119,14 +120,14 @@ export function cardStyles(s: Skin): CardStyles {
   if (s.family === 'collect') {
     return {
       card: { borderRadius: 14, background: s.paper, border: '3px solid #2a1d14', boxShadow: `4px 6px 0 ${s.main}, 0 10px 18px rgba(0,0,0,0.45)` },
-      chip: { fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: 1, padding: '4px 8px', borderRadius: 999, background: s.main, color: '#fff6e6' },
+      chip: { fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: 0.5, padding: '4px 8px', borderRadius: 999, background: s.main, color: '#fff6e6' },
       badge: { width: 44, height: 44, borderRadius: 8, background: '#2a1d14', color: s.paper },
       badgeText: { fontFamily: "'Bungee', sans-serif", fontSize: 15, lineHeight: 1 },
       art: { borderRadius: 4, background: s.art, border: '3px solid #2a1d14' },
       sprite: {},
-      name: { fontFamily: "'Bungee', sans-serif", fontSize: 14, lineHeight: 1.1, color: '#2a1d14' },
-      desc: { fontFamily: "'Space Mono', monospace", fontSize: 11, lineHeight: 1.35, color: '#5a4636' },
-      foot: { fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: 1, color: '#6e5230' },
+      name: { fontFamily: "'Bungee', sans-serif", fontSize: 15, lineHeight: 1.1, color: '#2a1d14' },
+      desc: { fontFamily: "'Space Mono', monospace", fontSize: 12, lineHeight: 1.3, color: '#3e2c1e' },
+      foot: { fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, color: '#4a3220' },
       bonus: { fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, padding: '3px 7px', borderRadius: 999, background: '#2a1d14', color: '#ffd23f' },
       vinyl: { position: 'absolute', top: 10, right: -16, width: 112, height: 112, borderRadius: '50%', background: 'repeating-radial-gradient(circle, #141010 0 3px, #221a17 3px 5px)', boxShadow: '0 6px 14px rgba(0,0,0,0.5)' },
       vinylLabel: { position: 'absolute', inset: 39, borderRadius: '50%', background: s.label, border: `5px solid ${s.paper}` },
@@ -136,15 +137,15 @@ export function cardStyles(s: Skin): CardStyles {
   const darkGround = s.ground !== '#ffe14d'
   return {
     card: { borderRadius: 6, background: s.main, border: '4px solid #111111', boxShadow: '0 0 0 5px #ffffff, 6px 8px 0 5px #000000' },
-    chip: { fontFamily: "'Rubik Mono One', sans-serif", fontSize: 10, background: s.ground, color: darkGround ? '#ffffff' : '#111111', padding: '4px 6px', transform: 'rotate(-3deg)' },
+    chip: { fontFamily: "'Rubik Mono One', sans-serif", fontSize: 11, background: s.ground, color: darkGround ? '#ffffff' : '#111111', padding: '4px 6px', transform: 'rotate(-3deg)' },
     badge: { width: 48, height: 48, background: '#ffffff', color: '#111111', clipPath: BURST },
     badgeText: { fontFamily: "'Rubik Mono One', sans-serif", fontSize: 12, transform: 'rotate(-12deg)' },
     art: { background: s.ground, border: '4px solid #111111', backgroundImage: 'radial-gradient(rgba(255,255,255,0.18) 2px, transparent 2.5px)', backgroundSize: '10px 10px' },
     sprite: { filter: 'drop-shadow(3px 3px 0 #111111)' },
-    name: { fontFamily: "'Permanent Marker', cursive", fontSize: 19, lineHeight: 1, color: '#111111' },
-    desc: { fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 500, lineHeight: 1.3, color: '#111111' },
-    foot: { fontFamily: "'Rubik Mono One', sans-serif", fontSize: 9, color: '#111111' },
-    bonus: { fontFamily: "'Rubik Mono One', sans-serif", fontSize: 9, padding: '3px 6px', background: '#ffee00', color: '#111111', border: '2px solid #111111', transform: 'rotate(3deg)' },
+    name: { fontFamily: "'Permanent Marker', cursive", fontSize: 20, lineHeight: 1, color: '#111111' },
+    desc: { fontFamily: "'Archivo', sans-serif", fontSize: 13, fontWeight: 600, lineHeight: 1.25, color: '#111111' },
+    foot: { fontFamily: "'Archivo', sans-serif", fontSize: 12, fontWeight: 800, color: '#111111' },
+    bonus: { fontFamily: "'Archivo', sans-serif", fontSize: 11, fontWeight: 800, padding: '3px 6px', background: '#ffee00', color: '#111111', border: '2px solid #111111', transform: 'rotate(3deg)' },
     holo: false,
   }
 }

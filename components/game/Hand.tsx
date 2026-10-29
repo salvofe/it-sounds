@@ -23,7 +23,7 @@ export default function Hand() {
   return (
     <div className="panel">
       <div className="panel-title pt-y">
-        ▶ YOUR HAND — Click a card to play it ▶
+        YOUR HAND<span className="panel-hint">Click a card to play it on the focused stage. Dimmed art = playable in another phase.</span>
       </div>
 
       {/* card row */}

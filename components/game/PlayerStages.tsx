@@ -50,11 +50,12 @@ function StagePanel({ sk }: { sk: StageKey }) {
   if (locked) {
     return (
       <div style={{ background: 'var(--panel2)', border: '2px solid var(--border)', borderTop: '3px solid var(--cyan)', padding: 10, opacity: 0.35 }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)', textAlign: 'right', marginBottom: 4 }}>
-          STAGE {sk.toUpperCase()} — LOCKED (round 2)
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, lineHeight: 1.6, color: 'var(--muted)', textAlign: 'right', marginBottom: 4 }}>
+          STAGE {sk.toUpperCase()}
         </div>
-        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)' }}>
-          LOCKED
+        <div style={{ height: 64, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', background: '#03030a', color: 'var(--muted)' }}>
+          <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11 }}>LOCKED</span>
+          <span style={{ fontSize: 20 }}>Opens in round 2</span>
         </div>
       </div>
     )
@@ -77,13 +78,13 @@ function StagePanel({ sk }: { sk: StageKey }) {
     >
       {/* shield badge */}
       {(s.protected || s.decoy) && (
-        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: `1px solid ${s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)'}`, color: s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 9, padding: '2px 4px', zIndex: 5 }}>
+        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: `1px solid ${s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)'}`, color: s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 10, padding: '3px 5px', zIndex: 5 }}>
           {s.decoy && !s.protected ? '🕵 DECOY' : 'SHIELDED'}
         </div>
       )}
 
-      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--yel)', textAlign: 'right', marginBottom: 4 }}>
-        STAGE {sk.toUpperCase()}{focused ? ' ✦FOCUSED' : ''}
+      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, lineHeight: 1.6, color: 'var(--yel)', textAlign: 'right', marginBottom: 4 }}>
+        STAGE {sk.toUpperCase()}{focused ? ' · FOCUS' : ''}
       </div>
 
       {/* stage banner */}
@@ -92,8 +93,8 @@ function StagePanel({ sk }: { sk: StageKey }) {
           dangerouslySetInnerHTML={{ __html: getSprite(s.stage) }}
         />
       ) : (
-        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)' }}>
-          NO STAGE — PLAY A STAGE CARD
+        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontSize: 20, color: 'var(--muted)' }}>
+          No stage yet: play a STAGE card
         </div>
       )}
 
@@ -135,8 +136,8 @@ function StagePanel({ sk }: { sk: StageKey }) {
 
       {/* score bar */}
       <div style={{
-        marginTop: 6, padding: '4px 5px', textAlign: 'center',
-        fontFamily: "'Press Start 2P',monospace", fontSize: 10,
+        marginTop: 6, padding: '6px 5px', textAlign: 'center', lineHeight: 1.6,
+        fontFamily: "'Press Start 2P',monospace", fontSize: 11,
         background: s.current >= s.threshold && s.threshold > 0 ? '#041a0a' : '#1a0505',
         color: s.current >= s.threshold && s.threshold > 0 ? 'var(--grn)' : 'var(--red)',
         border: `1px solid ${s.current >= s.threshold && s.threshold > 0 ? '#0a3a1a' : '#3a0a0a'}`,
@@ -148,7 +149,7 @@ function StagePanel({ sk }: { sk: StageKey }) {
 
       {/* active combos */}
       {s.combos.length > 0 && (
-        <div style={{ marginTop: 4, fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--yel)', textAlign: 'center', textShadow: '0 0 6px var(--yel)' }}>
+        <div style={{ marginTop: 4, fontFamily: "'Press Start 2P',monospace", fontSize: 10, lineHeight: 1.6, color: 'var(--yel)', textAlign: 'center' }}>
           ⚡ {s.combos.map(c => c.name).join(' + ')}
         </div>
       )}
@@ -161,8 +162,8 @@ export default function PlayerStages() {
     <div className="panel">
       <div className="px-corner tl" /><div className="px-corner tr" />
       <div className="px-corner bl" /><div className="px-corner br" />
-      <div className="panel-title pt-c">▶ YOUR STAGES — Click a stage to focus it, then play cards ▶</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+      <div className="panel-title pt-c">YOUR STAGES<span className="panel-hint">Click a stage to focus it, then play cards on it.</span></div>
+      <div className="stage-grid">
         {(['s1', 's2', 's3'] as StageKey[]).map(sk => <StagePanel key={sk} sk={sk} />)}
       </div>
     </div>

@@ -8,16 +8,16 @@ import type { Card } from '@/types/game'
 
 function Inspector({ card }: { card: Card | null }) {
   if (!card) {
-    return <div style={{ padding: 10, color: 'var(--muted)', fontSize: 18 }}>Hover a card to see full details...</div>
+    return <div style={{ padding: 10, color: 'var(--muted)', fontSize: 20 }}>Nothing selected yet.</div>
   }
   return (
     <div>
       <div style={{ width: '100%', height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#03030a', padding: 8 }}>
         <div style={{ width: 80, height: 80 }} dangerouslySetInnerHTML={{ __html: getSprite(card) }} />
       </div>
-      <div style={{ padding: 8, fontSize: 18, lineHeight: 1.6 }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--cyan)', marginBottom: 3 }}>{card.name}</div>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--muted)', marginBottom: 5 }}>{card.type.toUpperCase()}</div>
+      <div style={{ padding: 8, fontSize: 20, lineHeight: 1.3 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 12, lineHeight: 1.6, color: 'var(--cyan)', marginBottom: 3 }}>{card.name}</div>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)', marginBottom: 6 }}>{card.type.toUpperCase()}</div>
         <div style={{ color: 'var(--text)' }}>{card.desc}</div>
         {card.talent && <div style={{ color: 'var(--yel)', marginTop: 3 }}>Talent: +{(card.talent / 100).toFixed(2)}k fans</div>}
         {card.power && <div style={{ color: 'var(--purple)', marginTop: 3 }}>Track power: +{card.power}k fans</div>}
@@ -69,9 +69,9 @@ function CardDatabase() {
         style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 10 : 0, borderBottom: open ? '2px dashed var(--border)' : 'none' }}
         onClick={() => setOpen(v => !v)}
       >
-        <span>▶ CARD DATABASE ▶</span>
-        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--cyan)' }}>
-          {open ? '[ - HIDE ]' : '[ + SHOW ]'}
+        <span>CARD DATABASE</span>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--cyan)', whiteSpace: 'nowrap' }}>
+          {open ? '− HIDE' : '+ SHOW'}
         </span>
       </div>
       {open && (
@@ -138,14 +138,14 @@ export default function SidePanel() {
     <div>
       {/* counters */}
       <div className="panel">
-        <div className="panel-title pt-c" style={{ fontSize: 9 }}>COUNTERS</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, fontSize: 18 }}>
+        <div className="panel-title pt-c">COUNTERS</div>
+        <div className="num" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, fontSize: 20 }}>
           {[
             { label: 'YOU', color: 'var(--cyan)', h: playerHand.length, d: playerDeck.length, t: playerTrash.length },
             { label: 'AI', color: 'var(--mag)', h: aiHand.length, d: aiDeck.length, t: aiTrash.length },
           ].map(({ label, color, h, d, t }) => (
             <div key={label} style={{ background: '#04040e', border: `2px solid var(--border)`, borderTop: `2px solid ${color}`, padding: 6, lineHeight: 1.8 }}>
-              <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color, marginBottom: 3 }}>{label}</div>
+              <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color, marginBottom: 3 }}>{label}</div>
               Hand:<span style={{ color }}>{h}</span> Deck:<span style={{ color }}>{d}</span><br />
               Trash:<span style={{ color }}>{t}</span> Total:<span style={{ color }}>{h + d + t}</span>
             </div>
@@ -163,7 +163,7 @@ export default function SidePanel() {
 
       {/* inspector */}
       <div className="panel">
-        <div className="panel-title pt-c">CARD INSPECTOR — Hover any card</div>
+        <div className="panel-title pt-c">CARD INSPECTOR<span className="panel-hint">Point at or focus a card in your hand.</span></div>
         <div style={{ background: '#03030a', border: '2px solid var(--border)', minHeight: 140, overflow: 'hidden' }}>
           <Inspector card={inspected} />
         </div>
@@ -179,7 +179,7 @@ export default function SidePanel() {
 
       {/* Combos */}
       <div className="panel" style={{ borderColor: '#2a2a00' }}>
-        <div className="panel-title pt-y">⚡ COMBOS (discover them!)</div>
+        <div className="panel-title pt-y">COMBOS<span className="panel-hint">Build stages to discover them.</span></div>
         <ComboList />
       </div>
 
