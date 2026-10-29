@@ -47,8 +47,8 @@ export default function PhaseTransition() {
         <div style={{ width: 72, height: 72, margin: '0 auto 14px', animation: 'pt-sprite-spin 1.1s ease-out' }}
           dangerouslySetInnerHTML={{ __html: getPhaseSprite(phaseTransitionName) }}
         />
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--muted)', letterSpacing: 3, marginBottom: 10 }}>{lbl}</div>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 20, letterSpacing: 4, color: col, textShadow: `0 0 16px ${col}` }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 13, color: 'var(--muted)', letterSpacing: 3, marginBottom: 10 }}>{lbl}</div>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 26, letterSpacing: 4, color: col, textShadow: `0 0 16px ${col}` }}>
           {phaseTransitionName}
         </div>
       </div>

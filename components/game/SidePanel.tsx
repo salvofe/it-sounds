@@ -8,16 +8,16 @@ import type { Card } from '@/types/game'
 
 function Inspector({ card }: { card: Card | null }) {
   if (!card) {
-    return <div style={{ padding: 10, color: 'var(--muted)', fontSize: 13 }}>Hover a card to see full details...</div>
+    return <div style={{ padding: 10, color: 'var(--muted)', fontSize: 18 }}>Hover a card to see full details...</div>
   }
   return (
     <div>
       <div style={{ width: '100%', height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#03030a', padding: 8 }}>
         <div style={{ width: 80, height: 80 }} dangerouslySetInnerHTML={{ __html: getSprite(card) }} />
       </div>
-      <div style={{ padding: 8, fontSize: 13, lineHeight: 1.6 }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--cyan)', marginBottom: 3 }}>{card.name}</div>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: 'var(--muted)', marginBottom: 5 }}>{card.type.toUpperCase()}</div>
+      <div style={{ padding: 8, fontSize: 18, lineHeight: 1.6 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--cyan)', marginBottom: 3 }}>{card.name}</div>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--muted)', marginBottom: 5 }}>{card.type.toUpperCase()}</div>
         <div style={{ color: 'var(--text)' }}>{card.desc}</div>
         {card.talent && <div style={{ color: 'var(--yel)', marginTop: 3 }}>Talent: +{(card.talent / 100).toFixed(2)}k fans</div>}
         {card.power && <div style={{ color: 'var(--purple)', marginTop: 3 }}>Track power: +{card.power}k fans</div>}
@@ -25,7 +25,7 @@ function Inspector({ card }: { card: Card | null }) {
         {card.threshold && <div style={{ color: 'var(--cyan)', marginTop: 3 }}>Score threshold: {card.threshold}k fans</div>}
         {card.cost != null && card.cost > 0 && <div style={{ color: 'var(--mag)', marginTop: 3 }}>Hype cost: {card.cost}k</div>}
         {card.draw && <div style={{ color: 'var(--cyan)', marginTop: 3 }}>Draws {card.draw} cards</div>}
-        <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4, borderTop: '1px dashed var(--border)', paddingTop: 4 }}>
+        <div style={{ color: 'var(--muted)', fontSize: 17, marginTop: 4, borderTop: '1px dashed var(--border)', paddingTop: 4 }}>
           Phase: {cardPhaseLabel(card.type)}
         </div>
       </div>
@@ -38,7 +38,7 @@ function Inspector({ card }: { card: Card | null }) {
 function ComboList() {
   const { discovered } = useGameStore()
   return (
-    <div style={{ fontSize: 13 }}>
+    <div style={{ fontSize: 18 }}>
       {COMBOS.map(c => {
         const found = !!discovered[c.id]
         const fx = c.mult > 1 ? `×${c.mult}` : `+${c.bonus}k`
@@ -48,7 +48,7 @@ function ComboList() {
               <span style={{ color: found ? 'var(--yel)' : 'var(--muted)' }}>{found ? c.name : '??? COMBO'}</span>
               <span style={{ color: found ? 'var(--grn)' : 'var(--muted)', flexShrink: 0 }}>{found ? fx : '???'}</span>
             </div>
-            {found && <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 3 }}>{c.desc}</div>}
+            {found && <div style={{ fontSize: 16, color: 'var(--muted)', marginBottom: 3 }}>{c.desc}</div>}
           </div>
         )
       })}
@@ -70,17 +70,17 @@ function CardDatabase() {
         onClick={() => setOpen(v => !v)}
       >
         <span>▶ CARD DATABASE ▶</span>
-        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: 'var(--cyan)' }}>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--cyan)' }}>
           {open ? '[ - HIDE ]' : '[ + SHOW ]'}
         </span>
       </div>
       {open && (
         <div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 18 }}>
             <thead>
               <tr>
                 {['IMG', 'NAME', 'TYPE', 'EFFECT'].map(h => (
-                  <th key={h} style={{ background: '#08081a', fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: 'var(--cyan)', padding: 5, textAlign: 'left', borderBottom: '2px solid var(--border)' }}>{h}</th>
+                  <th key={h} style={{ background: '#08081a', fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--cyan)', padding: 5, textAlign: 'left', borderBottom: '2px solid var(--border)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -96,9 +96,9 @@ function CardDatabase() {
                       dangerouslySetInnerHTML={{ __html: getSprite(c as Card) }}
                     />
                   </td>
-                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: '#fff', fontFamily: "'Press Start 2P',monospace", fontSize: 6, verticalAlign: 'middle' }}>{c.name}</td>
-                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--yel)', fontSize: 12, verticalAlign: 'middle' }}>{c.type}</td>
-                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--muted)', fontSize: 12, verticalAlign: 'middle' }}>{c.desc}</td>
+                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: '#fff', fontFamily: "'Press Start 2P',monospace", fontSize: 10, verticalAlign: 'middle' }}>{c.name}</td>
+                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--yel)', fontSize: 17, verticalAlign: 'middle' }}>{c.type}</td>
+                  <td style={{ padding: '4px 5px', borderBottom: '1px solid #0e0e20', color: 'var(--muted)', fontSize: 17, verticalAlign: 'middle' }}>{c.desc}</td>
                 </tr>
               ))}
             </tbody>
@@ -138,14 +138,14 @@ export default function SidePanel() {
     <div>
       {/* counters */}
       <div className="panel">
-        <div className="panel-title pt-c" style={{ fontSize: 5 }}>COUNTERS</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, fontSize: 13 }}>
+        <div className="panel-title pt-c" style={{ fontSize: 9 }}>COUNTERS</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, fontSize: 18 }}>
           {[
             { label: 'YOU', color: 'var(--cyan)', h: playerHand.length, d: playerDeck.length, t: playerTrash.length },
             { label: 'AI', color: 'var(--mag)', h: aiHand.length, d: aiDeck.length, t: aiTrash.length },
           ].map(({ label, color, h, d, t }) => (
             <div key={label} style={{ background: '#04040e', border: `2px solid var(--border)`, borderTop: `2px solid ${color}`, padding: 6, lineHeight: 1.8 }}>
-              <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color, marginBottom: 3 }}>{label}</div>
+              <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color, marginBottom: 3 }}>{label}</div>
               Hand:<span style={{ color }}>{h}</span> Deck:<span style={{ color }}>{d}</span><br />
               Trash:<span style={{ color }}>{t}</span> Total:<span style={{ color }}>{h + d + t}</span>
             </div>
@@ -172,7 +172,7 @@ export default function SidePanel() {
       {/* AI commentary */}
       <div className="panel" style={{ borderColor: '#1a0028' }}>
         <div className="panel-title pt-m">AI LIVE COMMENTARY</div>
-        <div style={{ background: '#080010', border: '2px solid var(--mag)', padding: 8, fontSize: 15, color: '#ff88cc', fontStyle: 'italic', minHeight: 64, lineHeight: 1.4 }}>
+        <div style={{ background: '#080010', border: '2px solid var(--mag)', padding: 8, fontSize: 20, color: '#ff88cc', fontStyle: 'italic', minHeight: 64, lineHeight: 1.4 }}>
           {commentary}
         </div>
       </div>

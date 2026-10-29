@@ -30,12 +30,12 @@ function AIStagePanel({ sk }: { sk: StageKey }) {
       onClick={() => targetMode && aiClick(sk)}
     >
       {s.protected && (
-        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: '1px solid var(--grn)', color: 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 4, padding: '2px 4px', zIndex: 5 }}>
+        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: '1px solid var(--grn)', color: 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 9, padding: '2px 4px', zIndex: 5 }}>
           🛡 SHIELDED
         </div>
       )}
 
-      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--mag)', textAlign: 'right', marginBottom: 4 }}>
+      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--mag)', textAlign: 'right', marginBottom: 4 }}>
         AI {sk.toUpperCase()}{targetMode ? ' — CLICK TO ATTACK' : ''}
       </div>
 
@@ -44,7 +44,7 @@ function AIStagePanel({ sk }: { sk: StageKey }) {
           dangerouslySetInnerHTML={{ __html: getSprite(s.stage) }}
         />
       ) : (
-        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--muted)' }}>
+        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)' }}>
           AI STAGE EMPTY
         </div>
       )}
@@ -62,7 +62,7 @@ function AIStagePanel({ sk }: { sk: StageKey }) {
 
       <div style={{
         marginTop: 6, padding: '4px 5px', textAlign: 'center',
-        fontFamily: "'Press Start 2P',monospace", fontSize: 6,
+        fontFamily: "'Press Start 2P',monospace", fontSize: 10,
         background: s.current >= s.threshold && s.threshold > 0 ? '#041a0a' : '#1a0505',
         color: s.current >= s.threshold && s.threshold > 0 ? 'var(--grn)' : 'var(--red)',
         border: `1px solid ${s.current >= s.threshold && s.threshold > 0 ? '#0a3a1a' : '#3a0a0a'}`,

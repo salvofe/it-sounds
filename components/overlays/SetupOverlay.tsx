@@ -35,33 +35,33 @@ export default function SetupOverlay() {
   const sel: React.CSSProperties = {
     background: '#04040c', color: 'var(--text)',
     border: '2px solid var(--border)', padding: '8px 10px',
-    fontFamily: "'VT323',monospace", fontSize: 18, width: '100%',
+    fontFamily: "'VT323',monospace", fontSize: 24, width: '100%',
     cursor: 'pointer', outline: 'none',
   }
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 8000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(4,4,12,0.97)' }}>
       <div style={{ background: 'var(--panel)', border: '3px solid var(--cyan)', padding: 28, width: 480, position: 'relative' }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', textAlign: 'center', fontSize: 10, letterSpacing: 2, textShadow: '0 0 10px var(--yel)', marginBottom: 20 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', textAlign: 'center', fontSize: 14, letterSpacing: 2, textShadow: '0 0 10px var(--yel)', marginBottom: 20 }}>
           ◀ DECK CONFIG ▶
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--cyan)', display: 'block', marginBottom: 8, fontSize: 7 }}>▶ YOUR GENRE</label>
+          <label style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--cyan)', display: 'block', marginBottom: 8, fontSize: 11 }}>▶ YOUR GENRE</label>
           <select style={sel} value={pGenre} onChange={e => handleGenreChange(e.target.value)}>
             {PLAYER_GENRES.map(g => <option key={g}>{g}</option>)}
           </select>
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--cyan)', display: 'block', marginBottom: 8, fontSize: 7 }}>▶ YOUR SUB-GENRE</label>
+          <label style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--cyan)', display: 'block', marginBottom: 8, fontSize: 11 }}>▶ YOUR SUB-GENRE</label>
           <select style={sel} value={pSub} onChange={e => setPSub(e.target.value)}>
             {subs.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
 
         <div style={{ marginBottom: 14, borderTop: '2px dashed #1a1a30', paddingTop: 12 }}>
-          <label style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--mag)', display: 'block', marginBottom: 8, fontSize: 7 }}>▶ AI OPPONENT GENRE</label>
+          <label style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--mag)', display: 'block', marginBottom: 8, fontSize: 11 }}>▶ AI OPPONENT GENRE</label>
           <select style={{ ...sel, border: '2px solid var(--mag)' }} value={aiGenre} onChange={e => setAiGenre(e.target.value)}>
             {AI_GENRES.map(g => <option key={g}>{g}</option>)}
           </select>

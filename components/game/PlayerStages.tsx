@@ -23,14 +23,14 @@ function SlotView({
       <span className="slot-txt">{label}</span>
       {card && sl !== 'stage' && (
         <span
-          style={{ color: 'var(--cyan)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}
+          style={{ color: 'var(--cyan)', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}
           title="Move (free)"
           onClick={e => { e.stopPropagation(); startMove(sk, sl) }}
         >↔</span>
       )}
       {card && (
         <span
-          style={{ color: 'var(--red)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}
+          style={{ color: 'var(--red)', fontSize: 16, cursor: 'pointer', flexShrink: 0 }}
           title="Return to hand"
           onClick={e => { e.stopPropagation(); pickup(sk, sl) }}
         >↩</span>
@@ -48,10 +48,10 @@ function StagePanel({ sk }: { sk: StageKey }) {
   if (locked) {
     return (
       <div style={{ background: 'var(--panel2)', border: '2px solid var(--border)', borderTop: '3px solid var(--cyan)', padding: 10, opacity: 0.35 }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--muted)', textAlign: 'right', marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)', textAlign: 'right', marginBottom: 4 }}>
           STAGE {sk.toUpperCase()} — LOCKED (round 2)
         </div>
-        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--muted)' }}>
+        <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)' }}>
           LOCKED
         </div>
       </div>
@@ -75,12 +75,12 @@ function StagePanel({ sk }: { sk: StageKey }) {
     >
       {/* shield badge */}
       {(s.protected || s.decoy) && (
-        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: `1px solid ${s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)'}`, color: s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 4, padding: '2px 4px', zIndex: 5 }}>
+        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: `1px solid ${s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)'}`, color: s.decoy && !s.protected ? 'var(--yel)' : 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 9, padding: '2px 4px', zIndex: 5 }}>
           {s.decoy && !s.protected ? '🕵 DECOY' : 'SHIELDED'}
         </div>
       )}
 
-      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--yel)', textAlign: 'right', marginBottom: 4 }}>
+      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--yel)', textAlign: 'right', marginBottom: 4 }}>
         STAGE {sk.toUpperCase()}{focused ? ' ✦FOCUSED' : ''}
       </div>
 
@@ -90,7 +90,7 @@ function StagePanel({ sk }: { sk: StageKey }) {
           dangerouslySetInnerHTML={{ __html: getSprite(s.stage) }}
         />
       ) : (
-        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--muted)' }}>
+        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)' }}>
           NO STAGE — PLAY A STAGE CARD
         </div>
       )}
@@ -116,8 +116,8 @@ function StagePanel({ sk }: { sk: StageKey }) {
         <span className="slot-txt">{s.guest ? `⭐ ${s.guest.name}` : '⭐ BONUS SLOT (Collab/Viral/Sponsor)'}</span>
         {s.guest && (
           <>
-            <span style={{ color: 'var(--cyan)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }} onClick={e => { e.stopPropagation(); useGameStore.getState().startMove(sk, 'guest') }}>↔</span>
-            <span style={{ color: 'var(--red)', fontSize: 11, cursor: 'pointer', flexShrink: 0 }} onClick={e => { e.stopPropagation(); useGameStore.getState().pickup(sk, 'guest') }}>↩</span>
+            <span style={{ color: 'var(--cyan)', fontSize: 16, cursor: 'pointer', flexShrink: 0 }} onClick={e => { e.stopPropagation(); useGameStore.getState().startMove(sk, 'guest') }}>↔</span>
+            <span style={{ color: 'var(--red)', fontSize: 16, cursor: 'pointer', flexShrink: 0 }} onClick={e => { e.stopPropagation(); useGameStore.getState().pickup(sk, 'guest') }}>↩</span>
           </>
         )}
       </div>
@@ -134,7 +134,7 @@ function StagePanel({ sk }: { sk: StageKey }) {
       {/* score bar */}
       <div style={{
         marginTop: 6, padding: '4px 5px', textAlign: 'center',
-        fontFamily: "'Press Start 2P',monospace", fontSize: 6,
+        fontFamily: "'Press Start 2P',monospace", fontSize: 10,
         background: s.current >= s.threshold && s.threshold > 0 ? '#041a0a' : '#1a0505',
         color: s.current >= s.threshold && s.threshold > 0 ? 'var(--grn)' : 'var(--red)',
         border: `1px solid ${s.current >= s.threshold && s.threshold > 0 ? '#0a3a1a' : '#3a0a0a'}`,
@@ -146,7 +146,7 @@ function StagePanel({ sk }: { sk: StageKey }) {
 
       {/* active combos */}
       {s.combos.length > 0 && (
-        <div style={{ marginTop: 4, fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: 'var(--yel)', textAlign: 'center', textShadow: '0 0 6px var(--yel)' }}>
+        <div style={{ marginTop: 4, fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--yel)', textAlign: 'center', textShadow: '0 0 6px var(--yel)' }}>
           ⚡ {s.combos.map(c => c.name).join(' + ')}
         </div>
       )}

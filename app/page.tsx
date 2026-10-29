@@ -44,7 +44,7 @@ export default function GamePage() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 270px',
+            gridTemplateColumns: 'minmax(0, 1fr) 340px',
             gap: 10,
             padding: '10px 14px',
           }}>

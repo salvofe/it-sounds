@@ -38,7 +38,7 @@ export default function PhaseBar() {
         alignItems: 'center',
         flexWrap: 'wrap',
       }}>
-        <span style={{ fontFamily: "'Press Start 2P',monospace", color: col, fontSize: 8, flex: 1, letterSpacing: 1 }}>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", color: col, fontSize: 12, flex: 1, letterSpacing: 1 }}>
           PHASE: {phase}
         </span>
 
@@ -55,11 +55,11 @@ export default function PhaseBar() {
         </div>
 
         {/* actions */}
-        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 7, color: actionsLeft > 0 ? 'var(--grn)' : 'var(--red)' }}>
+        <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: actionsLeft > 0 ? 'var(--grn)' : 'var(--red)' }}>
           ACT: {actionDots}
         </span>
 
-        <button className="btn btn-y" style={{ fontSize: 6, padding: '5px 12px' }} onClick={nextPhase}>
+        <button className="btn btn-y" style={{ fontSize: 10, padding: '5px 12px' }} onClick={nextPhase}>
           {NEXT_LABELS[phase]}
         </button>
       </div>
@@ -69,13 +69,13 @@ export default function PhaseBar() {
         background: '#04040e',
         borderBottom: `2px solid ${col}`,
         padding: '8px 14px',
-        fontSize: 15,
+        fontSize: 20,
         lineHeight: 1.5,
         display: 'flex',
         gap: 10,
         alignItems: 'flex-start',
       }}>
-        <span style={{ fontSize: 20, flexShrink: 0, marginTop: 2 }}>💡</span>
+        <span style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>💡</span>
         <span dangerouslySetInnerHTML={{ __html: PHASE_HINTS[phase] }} />
       </div>
     </>

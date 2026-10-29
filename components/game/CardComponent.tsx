@@ -40,7 +40,7 @@ export default function CardComponent({ card, index, selected, phase }: Props) {
   return (
     <div
       style={{
-        width: 118, flexShrink: 0,
+        width: 156, flexShrink: 0,
         background: 'var(--panel2)',
         border: `2px solid ${selected ? 'var(--yel)' : '#2a2a4a'}`,
         cursor: ok ? 'pointer' : 'not-allowed',
@@ -58,8 +58,8 @@ export default function CardComponent({ card, index, selected, phase }: Props) {
       {[['0 0 0 0', 'border-top: 2px solid; border-left: 2px solid'], ['0 auto 0 0', ''], ['auto 0 0 auto', ''], ['auto auto 0 0', '']].map((_, i) => null)}
 
       {/* image */}
-      <div style={{ height: 76, overflow: 'hidden', background: '#03030a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6 }}>
-        <div className={anim} style={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      <div style={{ height: 92, overflow: 'hidden', background: '#03030a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6 }}>
+        <div className={anim} style={{ width: 74, height: 74, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           dangerouslySetInnerHTML={{ __html: getSprite(card) }}
         />
       </div>
@@ -68,17 +68,17 @@ export default function CardComponent({ card, index, selected, phase }: Props) {
       <div style={{ padding: '5px 6px 6px' }}>
         <div style={{
           fontFamily: "'Press Start 2P',monospace",
-          fontSize: 5, padding: '2px 4px', marginBottom: 3,
+          fontSize: 9, padding: '2px 4px', marginBottom: 3,
           display: 'inline-block', letterSpacing: 1,
           background: badge.bg, color: badge.color,
           border: `1px solid ${badge.border}`,
         }}>
           {card.type.toUpperCase()}
         </div>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: '#fff', marginBottom: 3, lineHeight: 1.5, minHeight: 18 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#fff', marginBottom: 3, lineHeight: 1.5, minHeight: 28 }}>
           {card.name}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.2 }}>{card.desc}</div>
+        <div style={{ fontSize: 17, color: 'var(--muted)', lineHeight: 1.2 }}>{card.desc}</div>
       </div>
 
       {/* trash button */}
@@ -86,7 +86,7 @@ export default function CardComponent({ card, index, selected, phase }: Props) {
         style={{
           position: 'absolute', top: 3, right: 3,
           background: 'rgba(10,0,5,0.85)', border: '1px solid var(--red)',
-          color: 'var(--red)', fontSize: 10, padding: '1px 4px', cursor: 'pointer', zIndex: 5,
+          color: 'var(--red)', fontSize: 14, padding: '1px 4px', cursor: 'pointer', zIndex: 5,
         }}
         onClick={e => { e.stopPropagation(); trashCard(index) }}
         title="Discard"

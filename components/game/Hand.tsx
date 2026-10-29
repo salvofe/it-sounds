@@ -38,7 +38,7 @@ export default function Hand() {
           />
         ))}
         {playerHand.length === 0 && (
-          <div style={{ color: 'var(--muted)', fontSize: 14, padding: '20px 0' }}>Hand is empty — advance to next round to draw more cards.</div>
+          <div style={{ color: 'var(--muted)', fontSize: 19, padding: '20px 0' }}>Hand is empty — advance to next round to draw more cards.</div>
         )}
       </div>
 
@@ -48,7 +48,7 @@ export default function Hand() {
           <button className="btn btn-y" onClick={mulligan}>MULLIGAN</button>
         )}
         <button className="btn btn-x" onClick={undo}>↩ UNDO</button>
-        <button className="btn btn-g" style={{ fontSize: 8, padding: '8px 16px' }} onClick={nextPhase}>
+        <button className="btn btn-g" style={{ fontSize: 12, padding: '8px 16px' }} onClick={nextPhase}>
           {NEXT_LABELS[phase]}
         </button>
         {targetMode && (

@@ -9,7 +9,7 @@ export default function RaceTracker() {
 
   return (
     <div className="race-bar-wrap">
-      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--muted)', marginBottom: 6, textAlign: 'center' }}>
+      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: 'var(--muted)', marginBottom: 6, textAlign: 'center' }}>
         ◀ RACE TO 20k FANS (best single round) ▶
       </div>
       {[
@@ -17,10 +17,10 @@ export default function RaceTracker() {
         { label: 'AI', pct: aPct, val: aiBestRound, col: 'var(--mag)' },
       ].map(({ label, pct, val, col }) => (
         <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-          <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: col, width: 38 }}>{label}</span>
+          <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: col, width: 38 }}>{label}</span>
           <div style={{ flex: 1, height: 14, background: '#0a0a18', border: '1px solid var(--border)', position: 'relative' }}>
             <div style={{ height: '100%', width: `${pct}%`, background: col, transition: 'width 0.4s' }} />
-            <div style={{ position: 'absolute', right: 4, top: 0, fontSize: 11, color: '#fff', lineHeight: '14px' }}>
+            <div style={{ position: 'absolute', right: 4, top: 0, fontSize: 16, color: '#fff', lineHeight: '14px' }}>
               {val.toFixed(1)}k
             </div>
           </div>

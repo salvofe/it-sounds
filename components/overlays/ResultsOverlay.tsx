@@ -21,22 +21,22 @@ export default function ResultsOverlay() {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,0,8,0.94)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: 'var(--panel)', border: '3px solid var(--yel)', padding: 28, width: 400, textAlign: 'center', position: 'relative' }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', fontSize: 11, marginBottom: 14, textShadow: '0 0 10px var(--yel)' }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', fontSize: 16, marginBottom: 14, textShadow: '0 0 10px var(--yel)' }}>
           {title}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '12px 0' }}>
           <div style={{ padding: 12, border: '2px solid var(--grn)', background: '#021208' }}>
-            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: 'var(--muted)' }}>YOUR BEST</div>
-            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 16, color: 'var(--grn)', marginTop: 6 }}>{pt.toFixed(1)}k</div>
+            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--muted)' }}>YOUR BEST</div>
+            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 20, color: 'var(--grn)', marginTop: 6 }}>{pt.toFixed(1)}k</div>
           </div>
           <div style={{ padding: 12, border: '2px solid var(--mag)', background: '#120208' }}>
-            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 5, color: 'var(--muted)' }}>AI BEST</div>
-            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 16, color: 'var(--mag)', marginTop: 6 }}>{at.toFixed(1)}k</div>
+            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: 'var(--muted)' }}>AI BEST</div>
+            <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 20, color: 'var(--mag)', marginTop: 6 }}>{at.toFixed(1)}k</div>
           </div>
         </div>
 
-        <div style={{ fontSize: 16, color: 'var(--muted)', marginBottom: 14, lineHeight: 1.5 }}>{msg}</div>
+        <div style={{ fontSize: 20, color: 'var(--muted)', marginBottom: 14, lineHeight: 1.5 }}>{msg}</div>
 
         {gameOver ? (
           <button className="btn btn-y" style={{ width: '100%' }} onClick={restartGame}>▶ PLAY AGAIN</button>
