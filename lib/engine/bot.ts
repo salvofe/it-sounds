@@ -1,5 +1,6 @@
 import { isPhaseOk } from '@/lib/data'
-import { applyAction, artists, currentPhase, stagePasses, tracks, STAGE_KEYS } from './rules'
+import { RULES } from './config'
+import { applyAction, artists, currentPhase, roundScore, stagePasses, tracks, STAGE_KEYS } from './rules'
 import type { Action, GameEvent, GameState, PlayerId, PlayerState } from './types'
 
 // Greedy bot: it plays through the same applyAction as a human, so it can't
@@ -26,7 +27,14 @@ function potential(p: PlayerState): number {
 }
 
 function evaluate(state: GameState, pid: PlayerId): number {
-  return potential(state.players[pid]) - 0.8 * potential(state.players[1 - pid])
+  let v = potential(state.players[pid]) - 0.8 * potential(state.players[1 - pid])
+  // short mode: winning this round is what counts
+  if (RULES[state.mode].win.kind === 'bestOf') {
+    const mine = roundScore(state.players[pid]), theirs = roundScore(state.players[1 - pid])
+    if (mine > theirs) v += 6
+    else if (theirs > mine) v -= 6
+  }
+  return v
 }
 
 export function candidateActions(state: GameState, pid: PlayerId): Action[] {
@@ -45,19 +53,43 @@ export function candidateActions(state: GameState, pid: PlayerId): Action[] {
       for (const k of STAGE_KEYS) if (p.unlocked[k]) out.push({ type: 'play', handIdx: i, sk: k, ...(c.type === 'stage' ? { slot: 'stage' as const } : {}) })
     }
   })
+  const shop = RULES[state.mode].shop
+  if (shop) {
+    if (p.extraActionsBought < shop.extraAction.maxPerRound) out.push({ type: 'buyAction' })
+    out.push({ type: 'buyDraw' })
+    for (const k of STAGE_KEYS) {
+      if (!p.stages[k].stage) continue
+      if (phase === 'LIVE SHOW') out.push({ type: 'boost', sk: k })
+      if (phase === 'SOUNDCHECK' || phase === 'LIVE SHOW') {
+        out.push({ type: 'upgrade', sk: k, kind: 'threshold' })
+        out.push({ type: 'upgrade', sk: k, kind: 'mult' })
+      }
+    }
+  }
   return out
 }
 
 export function playBotPhase(state: GameState, pid: PlayerId): { state: GameState; events: GameEvent[]; actions: Action[] } {
   const events: GameEvent[] = []
   const actions: Action[] = []
-  for (let step = 0; step < 30; step++) {
+  for (let step = 0; step < 40; step++) {
     const base = evaluate(state, pid)
     let best: { a: Action; s: GameState; ev: GameEvent[]; d: number } | null = null
     for (const a of candidateActions(state, pid)) {
       const r = applyAction(state, pid, a)
       if (!r.ok) continue
-      const d = evaluate(r.state, pid) - base
+      let after = evaluate(r.state, pid)
+      if (a.type === 'buyAction' || a.type === 'buyDraw') {
+        // worth it only if it enables a good next move
+        let bestNext = -Infinity
+        for (const n of candidateActions(r.state, pid)) {
+          if (n.type === 'buyAction' || n.type === 'buyDraw') continue
+          const rn = applyAction(r.state, pid, n)
+          if (rn.ok) bestNext = Math.max(bestNext, evaluate(rn.state, pid))
+        }
+        after = bestNext
+      }
+      const d = after - base
       if (!best || d > best.d) best = { a, s: r.state, ev: r.events, d }
     }
     // a forced discard must happen even if every option looks bad

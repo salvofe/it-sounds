@@ -471,3 +471,32 @@ describe('hype shop', () => {
     expect(err(s, 0, { type: 'buyAction' })).toMatch(/Discard/)
   })
 })
+
+describe('bot in short mode', () => {
+  it('finishes a short match within 5 rounds, every time', () => {
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      let s = shortGame(['Rock', 'Jazz'], seed)
+      for (let i = 0; i < 100 && !s.gameOver; i++) {
+        for (const pid of [0, 1] as PlayerId[]) if (!s.gameOver && !s.players[pid].ready) s = playBotPhase(s, pid).state
+      }
+      expect(s.gameOver).toBe(true)
+      expect(s.round).toBeLessThanOrEqual(5)
+    }
+  })
+
+  it('uses the Hype shop', () => {
+    const used = new Set<string>()
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      let s = shortGame(['Synthwave', 'Punk'], seed)
+      for (let i = 0; i < 100 && !s.gameOver; i++) {
+        for (const pid of [0, 1] as PlayerId[]) {
+          if (s.gameOver || s.players[pid].ready) continue
+          const r = playBotPhase(s, pid)
+          r.actions.forEach(a => used.add(a.type))
+          s = r.state
+        }
+      }
+    }
+    expect(['buyAction', 'buyDraw', 'boost', 'upgrade'].some(t => used.has(t))).toBe(true)
+  })
+})
