@@ -1,5 +1,5 @@
 'use client'
-import type { MouseEvent } from 'react'
+import type { PointerEvent } from 'react'
 import { PHASES } from '@/lib/data'
 import { useGameStore } from '@/store/gameStore'
 import Card from './Card'
@@ -33,6 +33,11 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
     ? (target ? `Attack ${name}` : `${name}, ${score}`)
     : (locked ? `${name} locked` : st.moveMode ? `Move card to ${name}` : `Focus ${name}, ${score}`)
 
+  const comboNames = s.combos.map(c => c.name).join(' + ')
+  const capText = `Artists ${[s.artist1, s.artist2, s.artist3].filter(Boolean).length}/3 · Tracks ${[s.track, s.track2, s.track3].filter(Boolean).length}/${s.stage?.maxTracks ?? 1} · HW ${s.hardware ? '✓' : '—'} · Bonus ${s.guest ? '✓' : '—'}`
+  const capLine = comboNames ? `${capText} · ⚡ ${comboNames}` : capText
+  const capTitle = capLine
+
   return (
     <div data-testid={`zone-${owner}-${sk}`}
       className={`zone zone-${owner}${focused ? ' focused' : ''}${target ? ' target' : ''}${passes ? ' passes' : ''}${locked ? ' locked' : ''}`}
@@ -45,17 +50,15 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
         <span className="zone-score num" title={score}>{score}</span>
       </button>
       <div className="zone-cards">
+        {cards.length === 0 && owner === 'me' && !locked && <div className="field-placeholder" aria-hidden="true">STAGE</div>}
         {cards.map(({ sl, card }) => (
           <FieldSlot key={sl} owner={owner} sk={sk} sl={sl} card={card} genre={genre}
             moving={!!st.moveMode && st.moveMode.sk === sk && st.moveMode.sl === sl} />
         ))}
       </div>
-      {s.stage && (
-        <div className="zone-cap">
-          Artists {[s.artist1, s.artist2, s.artist3].filter(Boolean).length}/3 · Tracks {[s.track, s.track2, s.track3].filter(Boolean).length}/{s.stage.maxTracks ?? 1} · HW {s.hardware ? '✓' : '—'} · Bonus {s.guest ? '✓' : '—'}
-        </div>
+      {(s.stage || s.combos.length > 0) && (
+        <div className="zone-cap" title={capTitle}>{capLine}</div>
       )}
-      {s.combos.length > 0 && <div className="zone-combos">⚡ {s.combos.map(c => c.name).join(' + ')}</div>}
       {owner === 'me' && st.shop && s.stage && <ZoneShop sk={sk} s={s} />}
     </div>
   )
@@ -63,10 +66,13 @@ export default function StageZone({ owner, sk }: { owner: 'me' | 'ai'; sk: Stage
 
 function FieldSlot({ owner, sk, sl, card, genre, moving }: { owner: 'me' | 'ai'; sk: StageKey; sl: StageSlot; card: CardT; genre: string; moving: boolean }) {
   const { pickup, startMove, setPreview } = useGameStore()
-  const show = (e: MouseEvent<HTMLDivElement>) => setPreview({ card, owner, anchor: anchorOf(e.currentTarget) })
+  const show = (el: Element) => setPreview({ card, owner, anchor: anchorOf(el) })
   return (
     <div className={`field-slot${moving ? ' moving' : ''}`} data-testid={`field-card-${owner}-${sk}-${sl}`}
-      onMouseEnter={show} onMouseLeave={() => setPreview(null)}>
+      tabIndex={0} aria-label={`${card.name}, ${card.type}`}
+      onFocus={e => show(e.currentTarget)} onBlur={() => setPreview(null)}
+      onPointerEnter={(e: PointerEvent<HTMLDivElement>) => { if (e.pointerType === 'mouse') show(e.currentTarget) }}
+      onPointerLeave={(e: PointerEvent<HTMLDivElement>) => { if (e.pointerType === 'mouse') setPreview(null) }}>
       <div className="field-card-inner"><Card card={card} genre={genre} size="field" /></div>
       {owner === 'me' && (
         <div className="field-actions" onClick={e => e.stopPropagation()}>
@@ -97,13 +103,13 @@ function ZoneShop({ sk, s }: { sk: StageKey; s: StageState }) {
   const K = sk.toUpperCase()
   return (
     <div className="zone-shop" onClick={e => e.stopPropagation()}>
-      <button type="button" className="btn btn-m" data-testid={`boost-${sk}`} disabled={!!boostWhy} title={boostWhy ?? ''}
+      <button type="button" className="btn btn-m" data-testid={`boost-${sk}`} disabled={!!boostWhy} title={boostWhy ?? `Boost +${shop.boost.amount}k`}
         aria-label={`Boost ${K} +${shop.boost.amount}k for ${shop.boost.cost} Hype${boostWhy ? `: ${boostWhy}` : ''}`} onClick={() => boost(sk)}>
-        BOOST +{shop.boost.amount}k · {shop.boost.cost}
+        BOOST · {shop.boost.cost}
       </button>
       <button type="button" className="btn btn-c" data-testid={`upgrade-threshold-${sk}`} disabled={!!upWhy} title={upWhy ?? `Fans needed −${shop.upgrade.thresholdCut}k`}
         aria-label={`${K}: fans needed −${shop.upgrade.thresholdCut}k for ${shop.upgrade.cost} Hype${upWhy ? `: ${upWhy}` : ''}`} onClick={() => upgrade(sk, 'threshold')}>
-        −{shop.upgrade.thresholdCut}k NEED · {shop.upgrade.cost}
+        −{shop.upgrade.thresholdCut}k · {shop.upgrade.cost}
       </button>
       <button type="button" className="btn btn-c" data-testid={`upgrade-mult-${sk}`} disabled={!!upWhy} title={upWhy ?? `Multiplier +${shop.upgrade.multBonus}`}
         aria-label={`${K}: multiplier +${shop.upgrade.multBonus} for ${shop.upgrade.cost} Hype${upWhy ? `: ${upWhy}` : ''}`} onClick={() => upgrade(sk, 'mult')}>

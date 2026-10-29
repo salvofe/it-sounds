@@ -67,6 +67,7 @@ export default function CenterBand() {
           )}
           <button type="button" className="btn btn-x" data-testid="undo" onClick={st.undo}>↩ UNDO</button>
           {st.targetMode && <button type="button" className="btn btn-r" data-testid="cancel-attack" onClick={st.cancelTarget}>✖ CANCEL</button>}
+          {st.moveMode && <button type="button" className="btn btn-r" data-testid="cancel-move" onClick={() => st.dropOnStage(st.moveMode!.sk)}>✖ CANCEL MOVE</button>}
           <button type="button" className="btn btn-g" data-testid="next-phase" onClick={st.nextPhase}>{NEXT_LABELS[phase]}</button>
         </div>
         <div className="band-system">

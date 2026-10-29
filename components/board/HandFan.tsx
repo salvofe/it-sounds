@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react'
+import { useEffect, useRef, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import { isPhaseOk, PHASES, cardPhaseLabel } from '@/lib/data'
 import { cardStats } from '@/lib/skins'
 import { useGameStore } from '@/store/gameStore'
@@ -26,8 +26,8 @@ export default function HandFan() {
     if (prevIds.current.size > ids.size && [...ids].every(id => prevIds.current.has(id))) still.current = true
     prevIds.current = ids
   }, [playerHand])
-  const enter = (e: MouseEvent<HTMLElement>, card: (typeof playerHand)[number]) => {
-    if (!still.current) setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })
+  const enter = (e: PointerEvent<HTMLElement>, card: (typeof playerHand)[number]) => {
+    if (e.pointerType === 'mouse' && !still.current) setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })
   }
   const move = (e: MouseEvent<HTMLElement>, card: (typeof playerHand)[number]) => {
     const p = pointer.current
@@ -46,14 +46,14 @@ export default function HandFan() {
         const selected = selectedCard === i
         const style = {
           '--rot': `${(i - mid) * Math.min(4, 28 / n)}deg`,
-          '--lift': `${Math.abs(i - mid) * 5}px`,
+          '--lift': `${Math.abs(i - mid) * 3}px`,
           marginLeft: i ? overlap : 0,
           zIndex: selected ? 60 : i,
         } as CSSProperties
         return (
           <div key={card.id} role="listitem" className={`fan-card${selected ? ' selected' : ''}`} style={style}
-            onMouseEnter={e => enter(e, card)} onMouseMove={e => move(e, card)}
-            onMouseLeave={() => setPreview(null)}>
+            onPointerEnter={e => enter(e, card)} onMouseMove={e => move(e, card)}
+            onPointerLeave={e => { if (e.pointerType === 'mouse') setPreview(null) }}>
             <div className="fan-card-lift">
             <button type="button" data-testid="hand-card" className={`hand-card-btn game-card${selected ? ' selected' : ''}`}
               onClick={() => ok && selectCard(i)}

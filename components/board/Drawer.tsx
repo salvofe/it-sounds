@@ -35,16 +35,16 @@ function CardDatabase() {
 
   return (
     <div className="panel">
-      <div
+      <button type="button" aria-expanded={open}
         className="panel-title pt-c"
-        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 10 : 0, borderBottom: open ? '2px dashed var(--border)' : 'none' }}
+        style={{ background: 'none', border: 0, padding: '0 0 6px', boxSizing: 'border-box', width: '100%', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 10 : 0, borderBottom: open ? '2px dashed var(--border)' : '0' }}
         onClick={() => setOpen(v => !v)}
       >
         <span>CARD DATABASE</span>
         <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--cyan)', whiteSpace: 'nowrap' }}>
           {open ? '− HIDE' : '+ SHOW'}
         </span>
-      </div>
+      </button>
       {open && (
         <div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 20 }}>
@@ -84,6 +84,13 @@ function CardDatabase() {
 export default function Drawer() {
   const { drawerOpen, toggleDrawer, logEntries, commentary, phaseIdx, mode } = useGameStore()
   const logRef = useRef<HTMLDivElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    if (drawerOpen) closeRef.current?.focus()
+    else if (wasOpen.current) document.querySelector<HTMLElement>('[data-testid="drawer-toggle"]')?.focus()
+    wasOpen.current = drawerOpen
+  }, [drawerOpen])
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [logEntries, drawerOpen])
   const phase = PHASES[phaseIdx] as Phase
   const hint = (mode === 'short' && PHASE_HINTS_SHORT[phase]) || PHASE_HINTS[phase]
@@ -91,7 +98,7 @@ export default function Drawer() {
     <aside className={`drawer${drawerOpen ? ' open' : ''}`} data-testid="drawer" aria-hidden={!drawerOpen} aria-label="Game info">
       <div className="drawer-head">
         <span className="panel-title pt-c" style={{ border: 'none', margin: 0, padding: 0 }}>INFO</span>
-        <button type="button" className="btn btn-x" onClick={toggleDrawer} aria-label="Close info">✕</button>
+        <button type="button" ref={closeRef} className="btn btn-x" onClick={toggleDrawer} aria-label="Close info">✕</button>
       </div>
       <section className="panel" data-testid="drawer-hint">
         <div className="panel-title pt-y">THIS PHASE</div>

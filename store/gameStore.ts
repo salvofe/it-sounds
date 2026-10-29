@@ -320,6 +320,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       const { playerHand, phaseIdx, mustDiscard, focusedStage } = get()
       const card = playerHand[idx]
       if (!card) return
+      set({ moveMode: null })
       if (mustDiscard > 0) { dispatch({ type: 'discard', handIdx: idx }); return }
       const phase = PHASES[phaseIdx] as Phase
       if (!isPhaseOk(card.type, phase)) { log(`✖ ${card.name} can't be played in ${phase} phase`); return }
@@ -375,6 +376,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     dropOnStage(sk) {
       const { moveMode, playerStages } = get()
       if (!moveMode) return false
+      if (sk === moveMode.sk) { set({ moveMode: null }); log('Move cancelled'); return true }
       const from = moveMode.sl
       const kind: StageSlot[] = from.startsWith('artist') ? ['artist1', 'artist2', 'artist3']
         : from.startsWith('track') ? ['track', 'track2', 'track3'] : [from]
@@ -392,7 +394,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
 
     setFocus(sk) {
       if (!get().unlockedStages[sk]) return
-      set({ focusedStage: sk }); log(`🎯 Stage ${sk} focused`)
+      set({ focusedStage: sk, moveMode: null }); log(`🎯 Stage ${sk} focused`)
     },
 
     toggleDrawer() { set(s => ({ drawerOpen: !s.drawerOpen })) },

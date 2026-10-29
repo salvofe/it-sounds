@@ -230,8 +230,11 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 /* ── Hand fan ─────────────────────────────────────────────────────────────── */
 .hand-fan { display: flex; justify-content: center; align-items: flex-start; height: 100%; padding: 0 12px; }
 /* the hand peeks up from the bottom edge: the row clips what hangs below it */
-.side-me { overflow: hidden; }
-.side-me .side-center { align-items: flex-start; padding-top: 40px; position: relative; z-index: 2; }
+.side-me { overflow: visible; }
+/* The hand's box reaches 50px up over the field zones (room for the lifted card) and clips what hangs below the table;
+   it ignores the pointer except on the cards themselves. */
+.side-me .side-center { align-items: flex-start; height: calc(100% + 50px); margin-top: -50px; padding-top: 58px; box-sizing: border-box; overflow: clip; position: relative; z-index: 30; pointer-events: none; }
+.side-me .fan-card, .side-me .hand-empty { pointer-events: auto; }
 .hand-empty { align-self: center; font-size: 20px; color: var(--muted); }
 .fan-card {
   position: relative; flex-shrink: 0;
@@ -253,7 +256,7 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 .board {
   position: relative; height: 100dvh; min-height: 640px; box-sizing: border-box; overflow: hidden;
   display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1.2fr) clamp(180px, 25vh, 240px);
-  gap: 6px; padding: 10px 16px 0;
+  gap: 6px; padding: 10px 16px 0; --fs: 1;
   background: radial-gradient(ellipse at 50% 45%, #1d1233 0%, #120b22 55%, #07050f 100%);
 }
 .board-lights { position: absolute; inset: -40px 0 auto 0; height: 320px; pointer-events: none; }
@@ -300,20 +303,21 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 .zone-score { margin-left: auto; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .zone.passes .zone-score { color: var(--grn); }
 .zone-shield { font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 3px 5px; border: 1px solid var(--grn); color: var(--grn); }
-.zone-cards { display: flex; align-items: flex-start; min-height: 116px; padding-left: 2px; }
-.field-slot { position: relative; flex: 0 1 76px; min-width: 22px; height: 116px; }
+.zone-cards { display: flex; align-items: flex-start; justify-content: center; min-height: calc(132px * var(--fs)); padding-left: 2px; }
+.field-placeholder { box-sizing: border-box; width: calc(88px * var(--fs)); height: calc(132px * var(--fs)); display: flex; align-items: center; justify-content: center; border: 2px dashed rgba(255,255,255,0.22); border-radius: 8px; font-family: 'Press Start 2P', monospace; font-size: 9px; color: rgba(255,255,255,0.35); }
+.field-slot { position: relative; flex: 0 1 calc(88px * var(--fs)); min-width: 22px; height: calc(132px * var(--fs)); }
 .field-slot:nth-child(odd) .field-card-inner { rotate: -1.5deg; }
 .field-slot:nth-child(even) .field-card-inner { rotate: 1.5deg; }
 .field-slot:hover, .field-slot:focus-within { z-index: 20; }
+.field-slot:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
 .field-slot.moving .card-face { outline: 3px solid var(--cyan); }
-.field-card-inner { position: absolute; left: 0; top: 0; width: 88px; transition: transform 120ms; transform: scale(0.86); transform-origin: top left; }
-.field-slot:hover .field-card-inner { transform: scale(0.86) translateY(-6px); }
+.field-card-inner { position: absolute; left: 0; top: 0; width: 88px; transition: transform 120ms; transform: scale(var(--fs)); transform-origin: top left; }
+.field-slot:hover .field-card-inner, .field-slot:focus-visible .field-card-inner { transform: translateY(-6px) scale(var(--fs)); }
 .field-actions { position: absolute; left: 4px; bottom: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity 120ms; z-index: 2; }
 .field-slot:hover .field-actions, .field-slot:focus-within .field-actions { opacity: 1; }
-@media (hover: none) { .field-actions { opacity: 1; } }
+@media (hover: none) { .field-actions { opacity: 1; } .field-actions button { width: 40px; height: 40px; } }
 .field-actions button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--cyan); background: #07050f; color: var(--cyan); font-size: 15px; cursor: pointer; }
 .field-actions button:last-child { border-color: var(--red); color: var(--red); }
-.zone-combos { font-size: 20px; line-height: 1.1; color: var(--yel); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zone-cap { font-size: 20px; line-height: 1.1; color: #b4bdd4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zone-decoy { border-color: var(--yel); color: var(--yel); }
 .zone-shop { display: flex; gap: 4px; }
@@ -381,7 +385,7 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
   .side { grid-template-columns: minmax(0, 1fr); }
   .side-piles { justify-content: flex-start; }
   .side-me .side-badge, .side-me .side-piles { margin-bottom: 0; }
-  .hand-fan { justify-content: flex-start; overflow-x: auto; padding-bottom: 12px; height: auto; }
+  .hand-fan { justify-content: flex-start; overflow-x: auto; padding: 40px 12px 12px; height: auto; }
   .fan-card { transform: none !important; margin-left: 8px !important; }
   .band-row { flex-wrap: wrap; gap: 8px 10px; }
   .band-row-info, .band-row-actions { min-height: 0; }
@@ -389,6 +393,9 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
   .band-system { margin-left: 0; }
   .band-ticker { flex-basis: 100%; text-align: left; }
   .side-me { overflow: visible; grid-template-rows: none; }
-  .side-me .side-center { padding-top: 0; z-index: auto; }
-  .hand-fan { padding-top: 40px; }
+  .side-me .side-center { height: 100%; margin-top: 0; padding-top: 0; overflow: visible; z-index: auto; pointer-events: auto; }
 }
+
+/* Field card scale: bigger on tall screens, tighter on short ones */
+@media (max-height: 860px) { .board { --fs: 0.86; } }
+@media (min-height: 1000px) { .board { --fs: 1.25; } }

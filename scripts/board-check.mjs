@@ -227,6 +227,28 @@ const CHECKS = {
     const noShop = !(await exists('buy-action')) && !(await exists('buy-draw'))
     return race && locked && noShop
   }],
+  C16: ['a stage with an active combo keeps its shop row visible at 1280×800', async () => {
+    try {
+      await viewport(1280, 800)
+      await newGame('short', `h.some(c => ${SMALL}) && h.filter(c => ${ARTIST}).length >= 3 && h.some(c => c.type === 'track')`)
+      await click('zone-me-s1')
+      await clickHandCard(await idxOf(SMALL))
+      for (let i = 0; i < 3; i++) await clickHandCard(await idxOf(ARTIST))
+      await nextPhase() // tracks are played in Soundcheck
+      await clickHandCard(await idxOf(`c.type === 'track'`))
+      if (!(await S('s.playerStages.s1.combos.length > 0'))) return false
+      await shot('board-combo-1280x800')
+      return await js(`(() => {
+        const z = document.querySelector('[data-testid="zone-me-s1"]'), b = document.querySelector('[data-testid="boost-s1"]')
+        if (!z || !b) return false
+        const zr = z.getBoundingClientRect(), br = b.getBoundingClientRect()
+        return br.height > 0 && br.top >= zr.top && br.bottom <= zr.bottom + 1 && z.scrollHeight <= z.clientHeight + 1
+          && (z.querySelector('.zone-cap')?.textContent ?? '').includes('⚡')
+      })()`)
+    } finally {
+      await viewport(1440, 900)
+    }
+  }],
   L1: ['1440×900: no vertical scroll, nothing clipped', async () => {
     await viewport(1440, 900)
     await newGame('short', `h.some(c => ${SMALL})`)
