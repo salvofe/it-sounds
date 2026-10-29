@@ -5,7 +5,7 @@
 // downbeat so every layer enters in time. Safe to call before start: apply()
 // queues, the rest no-op. Any failure leaves the game silent, never broken.
 
-import { Sound } from '@/lib/sound'
+import { Sound, loadTone } from '@/lib/sound'
 import type { Phase } from '@/types/game'
 import { CHORD, recipeFor, type Env, type Recipe, type Voice } from './recipes'
 import { notesAt, type NoteEvent, type VoiceId } from './sequencer'
@@ -201,8 +201,8 @@ export const Music = {
     starting = true
     try {
       await Sound.unlock()
-      const Tn = await import('tone')
-      if (Tn.context.state !== 'running') await Tn.start()
+      const Tn = await loadTone()
+      if (Tn.getContext().state !== 'running') await Tn.start()
       T = Tn
       M = buildMaster(Tn)
       step = 0; phraseStart = -1; barsInPhase = 0; live = null; built = ''

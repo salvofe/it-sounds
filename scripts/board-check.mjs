@@ -91,6 +91,11 @@ const noVerticalScroll = () => js(`(() => {
     && zones.length > 0 && zones.every(z => z.scrollHeight <= z.clientHeight + 1)
     && bottomOk('center-band') && bottomOk('ticker')
 })()`)
+const MU = expr => js(`(() => { const m = window.__itsoundsMusic?.debug(); return m ? (${expr}) : null })()`)
+async function waitMusic(expr, ms = 5000) {
+  for (let t = 0; t < ms; t += 250) { if (await MU(expr)) return true; await sleep(250) }
+  return false
+}
 
 // ── checks ──────────────────────────────────────────────────────────────────
 const CHECKS = {
@@ -283,6 +288,36 @@ const CHECKS = {
       await viewport(1440, 900)
     }
   }],
+  M1: ['music: a played stage adds the drum layer on the next bar', async () => {
+    await newGame('short', `h.some(c => ${SMALL})`)
+    if (!(await waitMusic('m.started && m.live && m.live.drums === 0'))) return false
+    if ((await MU('m.repeats')) !== 1) return false
+    await click('zone-me-s1')
+    await clickHandCard(await idxOf(SMALL))
+    if ((await MU('m.want.drums')) !== 1) return false
+    return await waitMusic('m.live.drums === 1')
+  }],
+  M2: ['music: mute keeps time, survives a new game, and unmutes', async () => {
+    await newGame()
+    if (!(await waitMusic('m.started && !m.muted'))) return false
+    await click('sound')
+    const a = await MU('m.step')
+    await sleep(700)
+    const b = await MU('m.step')
+    await newGame()
+    const stillMuted = await waitMusic('m.started && m.muted')
+    await click('sound')
+    return b > a && stillMuted && (await MU('m.muted')) === false
+  }],
+  M3: ['music: a restart during the fade-out comes back', async () => {
+    await newGame()
+    if (!(await waitMusic('m.started'))) return false
+    await js(`window.__itsounds.getState().restartGame()`)
+    await sleep(200)
+    await newGame()
+    await sleep(3000)
+    return await waitMusic('m.started && m.live !== null && m.repeats === 1')
+  }],
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
@@ -297,7 +332,7 @@ try {
   if (!up) throw new Error('next start did not come up (did you run next build?)')
 
   profile = mkdtempSync(join(tmpdir(), 'board-check-'))
-  chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${CDP_PORT}`, '--hide-scrollbars', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })
+  chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${CDP_PORT}`, '--hide-scrollbars', '--autoplay-policy=no-user-gesture-required', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })
   let pages = []
   for (let i = 0; i < 50 && !pages.length; i++) {
     try { pages = (await (await fetch(`http://127.0.0.1:${CDP_PORT}/json`)).json()).filter(t => t.type === 'page') } catch {}
