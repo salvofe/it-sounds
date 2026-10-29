@@ -10,6 +10,7 @@ import type { Phase } from '@/types/game'
 import { CHORD, recipeFor, type Env, type Recipe, type Voice } from './recipes'
 import { notesAt, type NoteEvent, type VoiceId } from './sequencer'
 import type { MusicMix } from './mix'
+import type { BeatInfo } from '@/lib/fx/beat'
 
 type ToneModule = typeof import('tone')
 
@@ -254,6 +255,14 @@ export const Music = {
   setMuted(m: boolean): void {
     muted = m
     try { M?.mute.gain.rampTo(m ? 0 : 1, 0.05) } catch {}
+  },
+
+  nextBeatIn(): BeatInfo | null {
+    if (!started || muted || !T) return null
+    try {
+      const tr = T.getTransport(), ctx = T.getContext()
+      return { msToBeat: (tr.nextSubdivision('4n') - ctx.currentTime) * 1000, beatMs: 60000 / tr.bpm.value }
+    } catch { return null }
   },
 
   debug() {
