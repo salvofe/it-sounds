@@ -206,7 +206,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
         const [pt, at] = ev.scores
         set({ showResults: true })
         log(`📊 Results — You: ${pt.toFixed(1)}k | AI: ${at.toFixed(1)}k`)
-        if (ev.gameOver) { if (ev.winner === ME) Sound.win(); else Sound.lose() }
+        if (ev.gameOver) { if (ev.winner === ME) Sound.win(); else if (ev.winner === 'draw') Sound.phase('RESULTS'); else Sound.lose() }
         break
       }
       case 'bought':
@@ -317,7 +317,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       if (!isPhaseOk(card.type, phase)) { log(`✖ ${card.name} can't be played in ${phase} phase`); return }
       Sound.card(card.type)
       if (card.type === 'attack') {
-        if (get().actionsLeft <= 0) { log('✖ No actions left this phase!'); return }
+        if (get().actionsLeft <= 0) { log('✖ No actions left!'); return }
         set({ selectedCard: idx, targetMode: true })
         log('🎯 ATTACK MODE: click an AI stage to target it'); return
       }

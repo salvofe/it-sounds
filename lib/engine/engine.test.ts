@@ -388,6 +388,11 @@ describe('scoring with boost and upgrades', () => {
     expect(scoreStage({ ...base(), track: null, boost: 2 }, 'Classical', 1).current).toBe(2)
   })
 
+  it('a boosted stage whose artists are all gone scores nothing', () => {
+    expect(scoreStage({ ...base(), artist1: null, track: null, boost: 2 }, 'Classical', 1).current).toBe(0)
+    expect(scoreStage({ ...base(), artist1: null, boost: 2 }, 'Classical', 1).current).toBe(0)
+  })
+
   it('classic stages (all fields zero) score as before', () => {
     expect(scoreStage(base(), 'Classical', 1).current).toBe(1.3)
   })
@@ -414,6 +419,14 @@ describe('hype shop', () => {
     s = rich(s)
     s = ok(s, 0, { type: 'buyAction' }).state
     expect(err(s, 0, { type: 'buyAction' })).toMatch(/Max 2/)
+  })
+
+  it('mulligan after buyAction restores the starting wallet and budget', () => {
+    let s = ok(shortGame(), 0, { type: 'buyAction' }).state
+    s = ok(s, 0, { type: 'mulligan' }).state
+    expect(s.players[0].wallet).toBe(3)
+    expect(s.players[0].actionsLeft).toBe(BUDGET[0])
+    expect(s.players[0].extraActionsBought).toBe(0)
   })
 
   it('buyAction needs enough Hype', () => {

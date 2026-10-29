@@ -122,7 +122,8 @@ export function scoreStage(s: StageState, genre: string, activeStages: number): 
   const threshold = parseFloat(((s.stage.threshold ?? 0) - s.thresholdCut).toFixed(2))
   const arts = artists(s)
   const trks = tracks(s)
-  if (!arts.length || !trks.length) return { ...s, current: s.boost, threshold, bonus: 0, combos: [] }
+  if (!arts.length) return { ...s, current: 0, threshold, bonus: 0, combos: [] }
+  if (!trks.length) return { ...s, current: s.boost, threshold, bonus: 0, combos: [] }
   let base = arts.reduce((a, x) => a + (x.talent ?? 0) / 100, 0) +
     trks.reduce((a, t) => a + (t.power ?? t.bonus ?? 0), 0)
   base *= (s.hardware?.multiplier ?? 1) + s.multBonus
@@ -285,7 +286,7 @@ function advancePhase(state: GameState, events: GameEvent[]) {
 // ── Action handlers ──────────────────────────────────────────────────────────
 
 function spend(p: PlayerState) {
-  if (p.actionsLeft <= 0) fail('No actions left this phase! Move placed cards (free) or advance the phase.')
+  if (p.actionsLeft <= 0) fail('No actions left! Move placed cards (free) or advance the phase.')
   p.actionsLeft -= 1
 }
 
@@ -502,6 +503,7 @@ function mulligan(state: GameState, pid: PlayerId, events: GameEvent[]) {
   }
   p.deck = shuffleInPlace(state, [...p.deck, ...p.hand, ...back])
   p.hand = []; p.wallet = startingWallet(rulesOf(state), p.genre); p.mustDiscard = 0
+  p.extraActionsBought = 0
   p.actionsLeft = actionCap(state, p); p.placedThisPhase = []; p.history = []
   p.mulliganUsed = true
   events.push({ type: 'mulligan', player: pid })

@@ -1,16 +1,20 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
+import { RULES } from '@/lib/engine'
 
 export default function RaceTracker() {
   const { playerBestRound, aiBestRound, mode, roundWins, round } = useGameStore()
   if (mode === 'short') {
-    const pips = (n: number, col: string) => Array.from({ length: 3 }, (_, i) => (
+    const w = RULES.short.win
+    const need = w.kind === 'bestOf' ? w.wins : 3
+    const maxRounds = w.kind === 'bestOf' ? w.maxRounds : 5
+    const pips = (n: number, col: string) => Array.from({ length: need }, (_, i) => (
       <span key={i} aria-hidden="true" style={{ width: 18, height: 18, display: 'inline-block', border: `2px solid ${col}`, background: i < n ? col : 'transparent', marginRight: 6 }} />
     ))
     return (
-      <div className="race-bar-wrap" aria-label={`Round ${round} of 5. You ${roundWins[0]}, AI ${roundWins[1]} round wins. First to 3 wins.`}>
+      <div className="race-bar-wrap" aria-label={`Round ${round} of ${maxRounds}. You ${roundWins[0]}, AI ${roundWins[1]} round wins. First to ${need} wins.`}>
         <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--muted)', marginBottom: 8, textAlign: 'center' }}>
-          ROUND {round} / 5 · FIRST TO 3 WINS
+          ROUND {round} / {maxRounds} · FIRST TO {need} WINS
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

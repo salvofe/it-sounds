@@ -161,14 +161,14 @@ function StagePanel({ sk }: { sk: StageKey }) {
         const btn = (why: string | null): CSSProperties => ({ fontSize: 10, padding: '6px 6px', flex: 1, ...(why ? { opacity: 0.45, cursor: 'not-allowed' } : {}) })
         return (
           <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-            <button className="btn btn-m" style={btn(boostWhy)} disabled={!!boostWhy} title={boostWhy ?? ''} onClick={() => boost(sk)}>
+            <button className="btn btn-m" style={btn(boostWhy)} disabled={!!boostWhy} title={boostWhy ?? ''} aria-label={`Boost ${sk.toUpperCase()}${boostWhy ? `: ${boostWhy}` : ''}`} onClick={() => boost(sk)}>
               BOOST +{shop.boost.amount}k · {shop.boost.cost}
             </button>
-            <button className="btn btn-c" style={btn(upWhy)} disabled={!!upWhy} title={upWhy ?? 'Fans needed −1k'} onClick={() => upgrade(sk, 'threshold')}>
-              −1k NEED · {shop.upgrade.cost}
+            <button className="btn btn-c" style={btn(upWhy)} disabled={!!upWhy} title={upWhy ?? `Fans needed −${shop.upgrade.thresholdCut}k`} aria-label={`Fans needed −${shop.upgrade.thresholdCut}k on ${sk.toUpperCase()}${upWhy ? `: ${upWhy}` : ''}`} onClick={() => upgrade(sk, 'threshold')}>
+              −{shop.upgrade.thresholdCut}k NEED · {shop.upgrade.cost}
             </button>
-            <button className="btn btn-c" style={btn(upWhy)} disabled={!!upWhy} title={upWhy ?? 'Multiplier +1'} onClick={() => upgrade(sk, 'mult')}>
-              ×+1 · {shop.upgrade.cost}
+            <button className="btn btn-c" style={btn(upWhy)} disabled={!!upWhy} title={upWhy ?? `Multiplier +${shop.upgrade.multBonus}`} aria-label={`Multiplier +${shop.upgrade.multBonus} on ${sk.toUpperCase()}${upWhy ? `: ${upWhy}` : ''}`} onClick={() => upgrade(sk, 'mult')}>
+              ×+{shop.upgrade.multBonus} · {shop.upgrade.cost}
             </button>
           </div>
         )

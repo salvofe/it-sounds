@@ -106,6 +106,12 @@ export const PHASE_HINTS: Record<Phase, string> = {
   RESULTS: `<strong>RESULTS PHASE</strong> – Scores are shown now! Click <span style="color:var(--yel)">NEXT ROUND</span> to bank your Hype and start fresh. Reach <span style="color:var(--yel)">20k fans in one round</span> to win!`,
 }
 
+// Short mode overrides: only the phases whose Classic text would mislead
+export const PHASE_HINTS_SHORT: Partial<Record<Phase, string>> = {
+  'LIVE SHOW': `<strong>LIVE SHOW</strong> – Play <span style="color:var(--red)">ATTACK</span> cards (click one, then click an AI stage), <span style="color:var(--yel)">BOOST</span> your stages and buy <span style="color:var(--cyan)">UPGRADES</span> with Hype.`,
+  RESULTS: `<strong>RESULTS PHASE</strong> – The player with <span style="color:var(--yel)">more fans wins the round</span>. First to <span style="color:var(--yel)">3 round wins</span> takes the match! Fans don't become Hype.`,
+}
+
 // ── Combos ────────────────────────────────────────────────────────────────────
 
 import type { StageState } from '@/types/game'

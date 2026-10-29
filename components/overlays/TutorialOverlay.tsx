@@ -1,5 +1,9 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
+import { RULES } from '@/lib/engine'
+
+const shortWin = RULES.short.win
+const SHORT_WINS = shortWin.kind === 'bestOf' ? shortWin.wins : 3
 
 const steps = [
   {
@@ -11,16 +15,17 @@ const steps = [
           <span style={{ color: 'var(--cyan)' }}>Stages</span> with{' '}
           <span style={{ color: 'var(--cyan)' }}>Artists</span>,{' '}
           <span style={{ color: 'var(--cyan)' }}>Tracks</span> and{' '}
-          <span style={{ color: 'var(--cyan)' }}>Hardware</span> — then score{' '}
-          <span style={{ color: 'var(--yel)' }}>20k fans</span> in a single round to{' '}
-          <span style={{ color: 'var(--grn)' }}>WIN</span>.
+          <span style={{ color: 'var(--cyan)' }}>Hardware</span> — then{' '}
+          <span style={{ color: 'var(--grn)' }}>WIN</span>: Short — first to{' '}
+          <span style={{ color: 'var(--yel)' }}>{SHORT_WINS} round wins</span>; Classic —{' '}
+          <span style={{ color: 'var(--yel)' }}>20k fans</span> in a single round.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginTop: 14 }}>
           {[
             { n: '01', c: 'var(--yel)', label: 'ARRANGEMENT', sub: 'Place Stages & Artists' },
             { n: '02', c: 'var(--cyan)', label: 'SOUNDCHECK', sub: 'Add Tracks & Gear' },
             { n: '03', c: 'var(--grn)', label: 'LIVE SHOW', sub: 'Attack the AI' },
-            { n: '04', c: 'var(--mag)', label: 'RESULTS', sub: 'Score your Hype' },
+            { n: '04', c: 'var(--mag)', label: 'RESULTS', sub: 'Compare your fans' },
           ].map(p => (
             <div key={p.n} style={{ padding: 8, border: `2px solid ${p.c}`, background: '#06060f', textAlign: 'center', fontSize: 17, lineHeight: 1.6 }}>
               <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, marginBottom: 4 }}>{p.n}</div>

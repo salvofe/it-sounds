@@ -1,5 +1,6 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
+import { RULES } from '@/lib/engine'
 
 export default function ResultsOverlay() {
   const { showResults, playerBestRound, aiBestRound, gameOver, closeResults, restartGame, mode, roundWins, lastRoundWinner, winner, playerRoundScore, aiRoundScore } = useGameStore()
@@ -14,7 +15,7 @@ export default function ResultsOverlay() {
       msg = winner === 'draw' ? `Even on rounds and fans (${tally}).` : `Final score ${tally} in rounds.`
     } else {
       title = lastRoundWinner === 0 ? 'ROUND WON' : lastRoundWinner === 1 ? 'ROUND LOST' : 'ROUND DRAWN'
-      msg = `Rounds ${tally} · first to 3 wins.${lastRoundWinner === 1 ? ' You get +2 Hype for the comeback.' : ''}`
+      msg = `Rounds ${tally} · first to 3 wins.${lastRoundWinner === 1 ? ' You get +${RULES.short.comebackBonus} Hype for the comeback.' : ''}`
     }
   } else {
     left = playerBestRound; right = aiBestRound; leftLabel = 'YOUR BEST'; rightLabel = 'AI BEST'

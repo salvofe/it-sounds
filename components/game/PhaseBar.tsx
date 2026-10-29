@@ -1,6 +1,6 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
-import { PHASES, PHASE_HINTS } from '@/lib/data'
+import { PHASES, PHASE_HINTS, PHASE_HINTS_SHORT } from '@/lib/data'
 import type { Phase } from '@/types/game'
 
 const NEXT_LABELS: Record<Phase, string> = {
@@ -18,7 +18,7 @@ const PHASE_COLORS: Record<Phase, string> = {
 }
 
 export default function PhaseBar() {
-  const { phaseIdx, nextPhase, actionsLeft, maxActions } = useGameStore()
+  const { phaseIdx, nextPhase, actionsLeft, maxActions, mode } = useGameStore()
   const phase = PHASES[phaseIdx] as Phase
   const col = PHASE_COLORS[phase]
 
@@ -76,7 +76,7 @@ export default function PhaseBar() {
         alignItems: 'flex-start',
       }}>
         <span style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>💡</span>
-        <span dangerouslySetInnerHTML={{ __html: PHASE_HINTS[phase] }} />
+        <span dangerouslySetInnerHTML={{ __html: (mode === 'short' && PHASE_HINTS_SHORT[phase]) || PHASE_HINTS[phase] }} />
       </div>
     </>
   )
