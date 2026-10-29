@@ -4,7 +4,7 @@ import {
   TEMPLATES, DECK_LIST, DECK_SIZE, FILLER_TEMPLATE, PHASES,
   detectCombos, genreBonus, stageCostMod, isBonus, isPhaseOk,
 } from '@/lib/data'
-import { RULES, actionBudget, type Mode, type Rules } from './config'
+import { RULES, actionBudget, type Mode, type Rules, type ShopRules } from './config'
 import type { Action, ActionResult, GameEvent, GameState, PlayerId, PlayerState } from './types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -508,6 +508,69 @@ function mulligan(state: GameState, pid: PlayerId, events: GameEvent[]) {
   draw(state, pid, rulesOf(state).startHand, events)
 }
 
+// ── Hype shop (short mode) ───────────────────────────────────────────────────
+
+function shopRules(state: GameState): ShopRules {
+  const sh = rulesOf(state).shop
+  if (!sh) fail('Not available in Classic mode')
+  return sh
+}
+
+function pay(p: PlayerState, cost: number) {
+  if (p.wallet < cost) fail(`Need ${cost} Hype (you have ${p.wallet.toFixed(1)})`)
+  p.wallet = parseFloat((p.wallet - cost).toFixed(2))
+}
+
+function buyAction(state: GameState, pid: PlayerId, events: GameEvent[]) {
+  const p = state.players[pid]
+  const rule = shopRules(state).extraAction
+  if (p.extraActionsBought >= rule.maxPerRound) fail(`Max ${rule.maxPerRound} extra actions per round`)
+  pay(p, rule.cost)
+  p.actionsLeft += 1
+  p.extraActionsBought += 1
+  events.push({ type: 'bought', player: pid, what: 'action' })
+}
+
+function buyDraw(state: GameState, pid: PlayerId, events: GameEvent[]) {
+  const p = state.players[pid]
+  const rule = shopRules(state).draw
+  pay(p, rule.cost)
+  spend(p)
+  events.push({ type: 'bought', player: pid, what: 'draw' })
+  draw(state, pid, rule.cards, events)
+}
+
+function boost(state: GameState, pid: PlayerId, sk: StageKey, events: GameEvent[]) {
+  const p = state.players[pid]
+  const rule = shopRules(state).boost
+  if (currentPhase(state) !== 'LIVE SHOW') fail('Boost only during the Live Show')
+  const s = p.stages[sk]
+  if (!s.stage || !artists(s).length) fail('Boost needs a stage with at least one artist')
+  if (s.boost + rule.amount > rule.maxPerStage) fail(`Max +${rule.maxPerStage}k boost per stage`)
+  pay(p, rule.cost)
+  spend(p)
+  s.boost += rule.amount
+  events.push({ type: 'boosted', player: pid, sk, amount: rule.amount })
+  recalc(p, pid, events)
+}
+
+function upgrade(state: GameState, pid: PlayerId, sk: StageKey, kind: 'threshold' | 'mult', events: GameEvent[]) {
+  const p = state.players[pid]
+  const rule = shopRules(state).upgrade
+  const phase = currentPhase(state)
+  if (phase !== 'SOUNDCHECK' && phase !== 'LIVE SHOW') fail('Upgrades only in Soundcheck or Live Show')
+  const s = p.stages[sk]
+  if (!s.stage) fail('No stage to upgrade')
+  if (s.upgraded) fail('This stage is already upgraded this round')
+  pay(p, rule.cost)
+  spend(p)
+  if (kind === 'threshold') s.thresholdCut = Math.min(rule.thresholdCut, Math.max(0, (s.stage.threshold ?? 0) - rule.minThreshold))
+  else s.multBonus = rule.multBonus
+  s.upgraded = true
+  events.push({ type: 'upgraded', player: pid, sk, kind })
+  recalc(p, pid, events)
+}
+
 // ── Entry point ──────────────────────────────────────────────────────────────
 
 export function applyAction(state: GameState, pid: PlayerId, action: Action): ActionResult {
@@ -535,6 +598,10 @@ export function applyAction(state: GameState, pid: PlayerId, action: Action): Ac
         case 'move': move(p, pid, action, events); break
         case 'undo': undo(s, p, pid, events); break
         case 'mulligan': mulligan(s, pid, events); break
+        case 'buyAction': buyAction(s, pid, events); break
+        case 'buyDraw': buyDraw(s, pid, events); break
+        case 'boost': boost(s, pid, action.sk, events); break
+        case 'upgrade': upgrade(s, pid, action.sk, action.kind, events); break
         case 'ready':
           p.ready = true
           events.push({ type: 'ready', player: pid })

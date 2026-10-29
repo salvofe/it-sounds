@@ -388,3 +388,86 @@ describe('scoring with boost and upgrades', () => {
     expect(scoreStage(base(), 'Classical', 1).current).toBe(1.3)
   })
 })
+
+describe('hype shop', () => {
+  const stageWithArtist = (s: GameState) => {
+    s = hand(s, 0, [T('Small Stage', 900), T('Beat Machine', 901)])
+    s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
+    return ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
+  }
+  const rich = (s: GameState, hype = 20) => produce(s, d => { d.players[0].wallet = hype })
+
+  it('every shop move is refused in classic mode', () => {
+    for (const a of [{ type: 'buyAction' }, { type: 'buyDraw' }, { type: 'boost', sk: 's1' }, { type: 'upgrade', sk: 's1', kind: 'mult' }] as Action[]) {
+      expect(err(rich(game()), 0, a)).toMatch(/Classic/)
+    }
+  })
+
+  it('buyAction: +1 action for 3 Hype, no action spent, max 2 per round', () => {
+    let s = ok(shortGame(), 0, { type: 'buyAction' }).state
+    expect(s.players[0].wallet).toBe(0)
+    expect(s.players[0].actionsLeft).toBe(8)
+    s = rich(s)
+    s = ok(s, 0, { type: 'buyAction' }).state
+    expect(err(s, 0, { type: 'buyAction' })).toMatch(/Max 2/)
+  })
+
+  it('buyAction needs enough Hype', () => {
+    const s = produce(shortGame(), d => { d.players[0].wallet = 2 })
+    expect(err(s, 0, { type: 'buyAction' })).toMatch(/Need 3 Hype/)
+  })
+
+  it('a bought action can be refunded by a pickup, but not beyond budget + bought', () => {
+    let s = hand(rich(shortGame()), 0, [T('Small Stage', 900)])
+    s = ok(s, 0, { type: 'buyAction' }).state
+    s = ok(s, 0, { type: 'play', handIdx: 0, sk: 's1' }).state
+    s = ok(s, 0, { type: 'pickup', sk: 's1', slot: 'stage' }).state
+    expect(s.players[0].actionsLeft).toBe(8)
+  })
+
+  it('buyDraw: 2 Hype + 1 action for 2 cards', () => {
+    const s0 = shortGame()
+    const s = ok(s0, 0, { type: 'buyDraw' }).state
+    expect(s.players[0].hand).toHaveLength(s0.players[0].hand.length + 2)
+    expect(s.players[0].wallet).toBe(1)
+    expect(s.players[0].actionsLeft).toBe(6)
+  })
+
+  it('boost: only in Live Show, needs an artist, +1k per 2 Hype, max +3k per stage', () => {
+    let s = rich(stageWithArtist(shortGame()))
+    expect(err(s, 0, { type: 'boost', sk: 's1' })).toMatch(/Live Show/)
+    s = toPhase(s, 2)
+    expect(err(s, 0, { type: 'boost', sk: 's2' })).toMatch(/artist/)
+    for (let i = 0; i < 3; i++) s = ok(s, 0, { type: 'boost', sk: 's1' }).state
+    expect(s.players[0].stages.s1.boost).toBe(3)
+    expect(s.players[0].stages.s1.current).toBe(3)
+    expect(s.players[0].wallet).toBe(14)
+    expect(err(s, 0, { type: 'boost', sk: 's1' })).toMatch(/\+3k/)
+  })
+
+  it('upgrade: once per stage per round, not in Arrangement, threshold floor 0.5', () => {
+    let s = rich(stageWithArtist(shortGame()))
+    expect(err(s, 0, { type: 'upgrade', sk: 's1', kind: 'threshold' })).toMatch(/Soundcheck or Live Show/)
+    s = toPhase(s, 1)
+    s = ok(s, 0, { type: 'upgrade', sk: 's1', kind: 'threshold' }).state
+    expect(s.players[0].stages.s1.threshold).toBe(0.5) // 1.5 - 1, and never below 0.5
+    expect(s.players[0].wallet).toBe(16)
+    expect(err(s, 0, { type: 'upgrade', sk: 's1', kind: 'mult' })).toMatch(/already upgraded/)
+  })
+
+  it('upgrades and boosts are gone next round', () => {
+    let s = rich(stageWithArtist(shortGame()))
+    s = toPhase(s, 2)
+    s = ok(s, 0, { type: 'boost', sk: 's1' }).state
+    s = ok(s, 0, { type: 'upgrade', sk: 's1', kind: 'mult' }).state
+    s = toPhase(s, 3)
+    s = readyBoth(s)
+    const st = s.players[0].stages.s1
+    expect([st.boost, st.multBonus, st.upgraded]).toEqual([0, 0, false])
+  })
+
+  it('shop moves are refused while a discard is pending', () => {
+    const s = produce(rich(shortGame()), d => { d.players[0].mustDiscard = 1 })
+    expect(err(s, 0, { type: 'buyAction' })).toMatch(/Discard/)
+  })
+})

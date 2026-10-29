@@ -62,6 +62,10 @@ export type Action =
   | { type: 'move'; from: { sk: StageKey; slot: StageSlot }; to: { sk: StageKey; slot: StageSlot } }
   | { type: 'undo' }
   | { type: 'mulligan' }
+  | { type: 'buyAction' }
+  | { type: 'buyDraw' }
+  | { type: 'boost'; sk: StageKey }
+  | { type: 'upgrade'; sk: StageKey; kind: 'threshold' | 'mult' }
   | { type: 'ready' }
 
 // ── Events (what happened — drives log, sound and animation) ─────────────────
@@ -74,6 +78,9 @@ export type GameEvent =
   | { type: 'attacked'; player: PlayerId; card: Card; sk: StageKey; blocked: 'shield' | 'decoy' | null; destroyed: { slot: StageSlot; card: Card }[] }
   | { type: 'drew'; player: PlayerId; cards: number[] }
   | { type: 'discarded'; player: PlayerId; card: Card }
+  | { type: 'bought'; player: PlayerId; what: 'action' | 'draw' }
+  | { type: 'boosted'; player: PlayerId; sk: StageKey; amount: number }
+  | { type: 'upgraded'; player: PlayerId; sk: StageKey; kind: 'threshold' | 'mult' }
   | { type: 'reshuffled'; player: PlayerId; count: number }
   | { type: 'combo'; player: PlayerId; sk: StageKey; combo: Combo }
   | { type: 'income'; player: PlayerId; amount: number }
