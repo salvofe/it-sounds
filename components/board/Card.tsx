@@ -76,14 +76,14 @@ function FieldFace({ card, st }: { card: CardT; st: CardStyles }) {
       ...st.card, boxShadow: '0 4px 10px rgba(0,0,0,0.6)', width: 88, height: 132, boxSizing: 'border-box',
       padding: 5, display: 'flex', flexDirection: 'column', gap: 3, overflow: 'hidden', position: 'relative',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 30 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 28 }}>
         <span aria-hidden="true" style={{ width: 10, height: 10, background: TYPE_COLORS[card.type] ?? '#fff', border: '1px solid #000' }} />
-        <span style={{ ...st.badge, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+        <span style={{ ...st.badge, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
           <span style={{ fontFamily: "'VT323', monospace", fontSize: 20, lineHeight: 1 }}>{stats.main}</span>
         </span>
       </div>
-      <div style={{ ...st.art, height: 50, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderWidth: 1 }}>
-        <div style={{ width: 44, height: 44 }} aria-hidden="true" dangerouslySetInnerHTML={{ __html: getSprite(card) }} />
+      <div style={{ ...st.art, height: 42, flexShrink: 0, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 34, height: 34 }} aria-hidden="true" dangerouslySetInnerHTML={{ __html: getSprite(card) }} />
       </div>
       <div style={{ fontFamily: "'VT323', monospace", fontSize: 20, lineHeight: 0.9, color: st.name.color, overflow: 'hidden', maxHeight: 36 }}>{card.name}</div>
     </div>

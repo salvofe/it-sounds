@@ -7,6 +7,9 @@ import Card from './Card'
 import { anchorOf } from './anchor'
 import type { Phase } from '@/types/game'
 
+const LIFT = 34 // keep in sync with .fan-card hover lift in globals.css
+const liftedAnchor = (el: Element) => { const a = anchorOf(el); return { ...a, top: a.top - LIFT } }
+
 // Your hand, fanned along the bottom edge. Hover/focus lifts a card and shows its preview.
 export default function HandFan() {
   const { playerHand, selectedCard, phaseIdx, playerGenre, selectCard, trashCard, setPreview } = useGameStore()
@@ -28,19 +31,21 @@ export default function HandFan() {
         } as CSSProperties
         return (
           <div key={card.id} role="listitem" className={`fan-card${selected ? ' selected' : ''}`} style={style}
-            onMouseEnter={e => setPreview({ card, owner: 'me', anchor: anchorOf(e.currentTarget) })}
+            onMouseEnter={e => setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })}
             onMouseLeave={() => setPreview(null)}>
-            <button type="button" data-testid="hand-card" className={`game-card${selected ? ' selected' : ''}`}
+            <div className="fan-card-lift">
+            <button type="button" data-testid="hand-card" className={`hand-card-btn game-card${selected ? ' selected' : ''}`}
               onClick={() => ok && selectCard(i)}
-              onFocus={e => setPreview({ card, owner: 'me', anchor: anchorOf(e.currentTarget) })}
+              onFocus={e => setPreview({ card, owner: 'me', anchor: liftedAnchor(e.currentTarget) })}
               onBlur={() => setPreview(null)}
               aria-label={`${card.name}, ${card.type}, ${cardStats(card).long}${ok ? '' : `, playable in ${cardPhaseLabel(card.type)}`}`}
               aria-pressed={selected} aria-disabled={!ok}
-              style={{ all: 'unset', display: 'block', cursor: ok ? 'pointer' : 'not-allowed' }}>
+              style={{ cursor: ok ? 'pointer' : 'not-allowed' }}>
               <Card card={card} genre={playerGenre} size="hand" playable={ok} selected={selected} />
             </button>
             <button type="button" className="card-trash" data-testid={`discard-${i}`}
               onClick={() => trashCard(i)} aria-label={`Discard ${card.name}`} title="Discard">🗑</button>
+            </div>
           </div>
         )
       })}

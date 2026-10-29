@@ -154,6 +154,7 @@ body::before {
 .game-card:hover .anim-shake,  .game-card.selected .anim-shake  { animation: spr-shake  0.5s ease-in-out infinite; }
 
 /* ── Hand cards (skins in lib/skins.ts) ──────────────────────────────────────── */
+.hand-card-btn { all: unset; display: block; }
 .game-card {
   font: inherit; color: inherit; appearance: none;
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -311,11 +312,15 @@ div:hover > .card-trash, .card-trash:focus-visible { opacity: 1; }
 .fan-card {
   position: relative; flex-shrink: 0;
   transform: translateY(var(--lift)) rotate(var(--rot)); transform-origin: 50% 120%;
-  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.fan-card:hover, .fan-card:focus-within, .fan-card.selected { transform: translateY(-34px) rotate(0deg); z-index: 50 !important; }
+/* The outer element never moves on hover (stable hit area); only this inner wrapper lifts. */
+.fan-card-lift { position: relative; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.fan-card:hover, .fan-card:focus-within, .fan-card.selected { z-index: 50 !important; }
+.fan-card:hover .fan-card-lift, .fan-card:focus-within .fan-card-lift, .fan-card.selected .fan-card-lift {
+  transform: translateY(calc(var(--lift) * -1 - 34px)) rotate(calc(var(--rot) * -1));
+}
 
 /* ── Card preview ─────────────────────────────────────────────────────────── */
 .card-preview { position: fixed; z-index: 400; pointer-events: none; filter: drop-shadow(0 12px 30px rgba(0,0,0,0.75)); }
 
-@media (prefers-reduced-motion: reduce) { .fan-card { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .fan-card-lift { transition: none; } }
