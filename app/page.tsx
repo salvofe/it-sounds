@@ -42,12 +42,7 @@ export default function GamePage() {
           <PhaseBar />
           <RaceTracker />
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 270px',
-            gap: 10,
-            padding: '10px 14px',
-          }}>
+          <div className="game-grid">
             {/* Left column */}
             <div>
               <PlayerStages />

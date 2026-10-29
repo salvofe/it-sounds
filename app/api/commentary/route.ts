@@ -1,9 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
-const client = new Anthropic()
+const FALLBACK = 'My algorithms are running hot. Your crowd is already mine.'
+
+// no key (e.g. a public deploy without rate limiting) → canned line, no API calls
+const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null
 
 export async function POST(req: NextRequest) {
+  if (!client) return NextResponse.json({ text: FALLBACK })
   try {
     const { ctx, playerBoard, aiBoard } = await req.json() as {
       ctx: string
@@ -31,6 +35,6 @@ Be competitive and music-themed. No quotes.`
     return NextResponse.json({ text })
   } catch (err) {
     console.error('Commentary API error:', err)
-    return NextResponse.json({ text: 'My algorithms are running hot. Your crowd is already mine.' })
+    return NextResponse.json({ text: FALLBACK })
   }
 }

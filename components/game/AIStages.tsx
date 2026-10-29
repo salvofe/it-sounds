@@ -1,6 +1,7 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
 import { getSprite } from '@/lib/data'
+import { skinFor } from '@/lib/skins'
 import type { StageKey, StageState, Card } from '@/types/game'
 
 function AISlot({ card, label, hw = false }: { card: Card | null; label: string; hw?: boolean }) {
@@ -13,15 +14,16 @@ function AISlot({ card, label, hw = false }: { card: Card | null; label: string;
 }
 
 function AIStagePanel({ sk }: { sk: StageKey }) {
-  const { aiStages, targetMode, aiClick } = useGameStore()
+  const { aiStages, targetMode, aiClick, aiGenre } = useGameStore()
   const s: StageState = aiStages[sk]
+  const skin = skinFor(aiGenre)
 
   return (
     <div
       style={{
         background: 'var(--panel2)',
         border: `2px solid ${targetMode ? 'var(--red)' : 'var(--border)'}`,
-        borderTop: '3px solid var(--mag)',
+        borderTop: `5px solid ${skin.main}`,
         padding: 10,
         position: 'relative',
         cursor: targetMode ? 'crosshair' : 'default',
@@ -30,13 +32,13 @@ function AIStagePanel({ sk }: { sk: StageKey }) {
       onClick={() => targetMode && aiClick(sk)}
     >
       {s.protected && (
-        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: '1px solid var(--grn)', color: 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 4, padding: '2px 4px', zIndex: 5 }}>
+        <div style={{ position: 'absolute', top: 6, left: 6, background: '#021408', border: '1px solid var(--grn)', color: 'var(--grn)', fontFamily: "'Press Start 2P',monospace", fontSize: 10, padding: '3px 5px', zIndex: 5 }}>
           🛡 SHIELDED
         </div>
       )}
 
-      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--mag)', textAlign: 'right', marginBottom: 4 }}>
-        AI {sk.toUpperCase()}{targetMode ? ' — CLICK TO ATTACK' : ''}
+      <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, lineHeight: 1.6, color: targetMode ? 'var(--red)' : skin.main, textAlign: 'right', marginBottom: 4 }}>
+        AI {sk.toUpperCase()}{targetMode ? ' · TARGET' : ''}
       </div>
 
       {s.stage ? (
@@ -44,8 +46,8 @@ function AIStagePanel({ sk }: { sk: StageKey }) {
           dangerouslySetInnerHTML={{ __html: getSprite(s.stage) }}
         />
       ) : (
-        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontFamily: "'Press Start 2P',monospace", fontSize: 6, color: 'var(--muted)' }}>
-          AI STAGE EMPTY
+        <div style={{ width: '100%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border)', marginBottom: 6, background: '#03030a', fontSize: 20, color: 'var(--muted)' }}>
+          No stage yet
         </div>
       )}
 
@@ -61,8 +63,8 @@ function AIStagePanel({ sk }: { sk: StageKey }) {
       <AISlot card={s.track} label={s.track ? s.track.name : 'T1: empty'} />
 
       <div style={{
-        marginTop: 6, padding: '4px 5px', textAlign: 'center',
-        fontFamily: "'Press Start 2P',monospace", fontSize: 6,
+        marginTop: 6, padding: '6px 5px', textAlign: 'center', lineHeight: 1.6,
+        fontFamily: "'Press Start 2P',monospace", fontSize: 11,
         background: s.current >= s.threshold && s.threshold > 0 ? '#041a0a' : '#1a0505',
         color: s.current >= s.threshold && s.threshold > 0 ? 'var(--grn)' : 'var(--red)',
         border: `1px solid ${s.current >= s.threshold && s.threshold > 0 ? '#0a3a1a' : '#3a0a0a'}`,
@@ -80,8 +82,8 @@ export default function AIStages() {
       <div className="px-corner tr" style={{ borderColor: 'var(--mag)' }} />
       <div className="px-corner bl" style={{ borderColor: 'var(--mag)' }} />
       <div className="px-corner br" style={{ borderColor: 'var(--mag)' }} />
-      <div className="panel-title pt-m">▶ AI OPPONENT STAGES — Play Attack cards here during Live Show ▶</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+      <div className="panel-title pt-m">AI STAGES<span className="panel-hint">Hit them with ATTACK cards during the Live Show.</span></div>
+      <div className="stage-grid">
         {(['s1', 's2', 's3'] as StageKey[]).map(sk => <AIStagePanel key={sk} sk={sk} />)}
       </div>
     </div>
