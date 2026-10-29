@@ -18,6 +18,8 @@ export type FxStep =
 export const AI_GAP_MS = 500
 export const AFTER_MOVES_MS = 300
 export const GAME_OVER_AFTER_MS = 1200
+export const PHASE_OVERLAY_MS = 1300   // the phase transition card covers the table for 1.2 s
+export const RESULTS_SHOW_MS = 1600    // confetti / dimming / fireworks get the table before the results panel
 
 export function buildSteps(events: GameEvent[], me: PlayerId): FxStep[] {
   const side = (p: PlayerId): Side => (p === me ? 'me' : 'ai')
@@ -65,5 +67,13 @@ export function buildSteps(events: GameEvent[], me: PlayerId): FxStep[] {
     else if ('win' in t) { resultsAt = tailAt; out.push({ kind: 'results', win: t.win, at: tailAt }) }
     else out.push({ kind: 'gameOver', win: t.over, at: resultsAt + GAME_OVER_AFTER_MS })
   }
-  return out
+  // a phase change covers the table with its transition card: start after it
+  const offset = events.some(ev => ev.type === 'phase') ? PHASE_OVERLAY_MS : 0
+  return offset ? out.map(s => ({ ...s, at: s.at + offset })) : out
+}
+
+// How long the results panel waits so the results moment is seen on the table first.
+export function resultsOverlayDelay(steps: FxStep[]): number {
+  const ends = steps.filter(s => s.kind === 'results' || s.kind === 'gameOver').map(s => s.at)
+  return ends.length ? Math.max(...ends) + RESULTS_SHOW_MS : 0
 }

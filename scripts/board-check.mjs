@@ -177,7 +177,9 @@ const CHECKS = {
   C9: ['advance phases, see results, start the next round', async () => {
     await newGame()
     await nextPhase(); await nextPhase(); await nextPhase()
-    if (!(await S('s.showResults'))) return false
+    let shown = false
+    for (let t = 0; t < 8000 && !shown; t += 250) { shown = await S('s.showResults'); if (!shown) await sleep(250) }
+    if (!shown) return false
     await js(`[...document.querySelectorAll('button')].find(b => b.textContent.includes('NEXT ROUND'))?.click()`)
     await sleep(500)
     return (await S('s.round === 2 && s.phaseIdx === 0'))
@@ -345,8 +347,13 @@ const CHECKS = {
     await js(`document.querySelectorAll('[data-testid="hand-card"]')[${await idxOf(SMALL)}].click()`)
     let flew = false
     for (let t = 0; t < 600 && !flew; t += 50) { flew = await exists('flying-card'); if (!flew) await sleep(50) }
-    await sleep(1500)
-    return flew && (await FX('f.flown')) === f0 + 1 && (await FX('f.flights === 0 && f.hidden === 0')) === true
+    let landed = false
+    for (let t = 0; t < 1500 && !landed; t += 30) {
+      landed = await js(`!!document.querySelector('[data-testid="field-card-me-s1-stage"]')?.getAnimations().some(a => a.id === 'fx-land')`)
+      if (!landed) await sleep(30)
+    }
+    await sleep(1200)
+    return flew && landed && (await FX('f.flown')) === f0 + 1 && (await FX('f.flights === 0 && f.hidden === 0')) === true
       && await js(`(() => { const el = document.querySelector('[data-testid="field-card-me-s1-stage"]'); return !!el && !el.classList.contains('fx-hidden') })()`)
   }],
   A2: ['fx: a destroying attack shatters into pixels and shakes the stage', async () => {
@@ -355,7 +362,7 @@ const CHECKS = {
     const s0 = await FX('f.spawned')
     await js(`window.__itsoundsFx.run(${FAKE_ATTACK}, { me: 'Synthwave', ai: 'Industrial' })`)
     let shook = false
-    for (let t = 0; t < 1500 && !shook; t += 50) { shook = await js(`document.querySelector('[data-testid="zone-me-s1"]').classList.contains('fx-shake')`); if (!shook) await sleep(50) }
+    for (let t = 0; t < 1500 && !shook; t += 50) { shook = await js(`document.querySelector('[data-testid="zone-me-s1"]').getAnimations().some(a => a.id === 'fx-shake')`); if (!shook) await sleep(50) }
     return shook && (await FX('f.spawned')) > s0
   }],
   A3: ['fx: reduced motion shows no particles and no flight, and the card still lands', async () => {
@@ -394,6 +401,17 @@ const CHECKS = {
     await js(`(() => { window.__itsoundsFx.prepare(${step}); window.__itsoundsFx.run(${step}, { me: 'Synthwave', ai: 'Industrial' }) })()`)
     await sleep(600)
     return (await FX('f.hidden === 0 && f.flights === 0')) === true
+  }],
+  A6: ['fx: a new game starts with no leftover particles', async () => {
+    await newGame()
+    await sleep(500)
+    await js(`window.__itsoundsFx.run([{ kind: 'gameOver', win: true, at: 0 }], { me: 'Synthwave', ai: 'Industrial' })`)
+    await sleep(500)
+    if (!((await FX('f.particles')) > 0)) return false
+    await js(`window.__itsounds.getState().restartGame()`)
+    await newGame()
+    await sleep(100)
+    return (await FX('f.particles')) === 0
   }],
 }
 

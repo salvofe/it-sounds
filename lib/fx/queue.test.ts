@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { TEMPLATES } from '@/lib/data'
 import type { GameEvent } from '@/lib/engine'
 import type { Card } from '@/types/game'
-import { AFTER_MOVES_MS, AI_GAP_MS, GAME_OVER_AFTER_MS, buildSteps } from './queue'
+import { AFTER_MOVES_MS, AI_GAP_MS, GAME_OVER_AFTER_MS, PHASE_OVERLAY_MS, RESULTS_SHOW_MS, buildSteps, resultsOverlayDelay } from './queue'
 
 const T = (name: string, id: number): Card => {
   const t = TEMPLATES.find(x => x.name === name)
@@ -53,9 +53,9 @@ describe('buildSteps', () => {
 
   it('opens the Live Show after the AI moves', () => {
     const steps = buildSteps([placed(1, T('Small Stage', 1)), placed(1, T('Synth Wizard', 2), 's1', 'artist1'), { type: 'phase', phase: 'LIVE SHOW', round: 1 }], 0)
-    expect(steps.at(-1)).toEqual({ kind: 'live', at: AI_GAP_MS + AFTER_MOVES_MS })
+    expect(steps.at(-1)).toEqual({ kind: 'live', at: PHASE_OVERLAY_MS + AI_GAP_MS + AFTER_MOVES_MS })
     expect(buildSteps([{ type: 'phase', phase: 'SOUNDCHECK', round: 1 }], 0)).toEqual([])
-    expect(buildSteps([{ type: 'phase', phase: 'LIVE SHOW', round: 1 }], 0)).toEqual([{ kind: 'live', at: 0 }])
+    expect(buildSteps([{ type: 'phase', phase: 'LIVE SHOW', round: 1 }], 0)).toEqual([{ kind: 'live', at: PHASE_OVERLAY_MS }])
   })
 
   it('celebrates only a won round, and the match at game over', () => {
@@ -69,5 +69,17 @@ describe('buildSteps', () => {
       { kind: 'gameOver', win: true, at: GAME_OVER_AFTER_MS },
     ])
     expect(buildSteps([res([5, 2], true, 'draw')], 0).at(-1)).toEqual({ kind: 'gameOver', win: false, at: GAME_OVER_AFTER_MS })
+  })
+
+  it('waits for the phase transition overlay before showing anything', () => {
+    const steps = buildSteps([placed(1, T('Small Stage', 1)), { type: 'phase', phase: 'SOUNDCHECK', round: 1 }], 0)
+    expect(steps).toEqual([expect.objectContaining({ kind: 'fly', owner: 'ai', at: PHASE_OVERLAY_MS })])
+    expect(buildSteps([placed(0, T('Small Stage', 2))], 0)[0].at).toBe(0)
+  })
+
+  it('opens the results overlay only after the results moment has played', () => {
+    expect(resultsOverlayDelay([])).toBe(0)
+    expect(resultsOverlayDelay([{ kind: 'results', win: true, at: 1600 }])).toBe(1600 + RESULTS_SHOW_MS)
+    expect(resultsOverlayDelay([{ kind: 'results', win: true, at: 1600 }, { kind: 'gameOver', win: true, at: 2800 }])).toBe(2800 + RESULTS_SHOW_MS)
   })
 })

@@ -48,6 +48,7 @@ export default function FxLayer() {
       document.removeEventListener('keydown', skipIfPlaying, true)
       document.removeEventListener('visibilitychange', onVis)
       cancelAnimationFrame(raf)
+      particles.clear()
     }
   }, [])
   return (
