@@ -90,6 +90,12 @@ gli eventi c'è un `attacked` dell'AI che ha distrutto tue carte, chiama anche `
 `Music.start()` parte con `Sound.unlock()` al primo clic; `Music.stop()` a fine partita (sfuma in 2 s)
 e su nuova partita si riparte. Il player tiene il mix "voluto" e lo rende "vivo" sul battere.
 
+**Niente crepitii** (emersi nel prototipo):
+- nessun salto istantaneo di guadagno: pompa e glitch usano rampe di almeno 4-10 ms;
+- attacco minimo degli inviluppi 5 ms;
+- riverbero a convoluzione (`Tone.Reverb`), non Freeverb; contesto audio con `latencyHint: 'playback'`;
+- margine sul master (circa −8 dB prima del limiter).
+
 **Volumi**: la musica sta sotto gli effetti (master musica circa −10 dB rispetto agli effetti), così i suoni
 delle carte restano leggibili. Il volume esatto si tara a orecchio.
 

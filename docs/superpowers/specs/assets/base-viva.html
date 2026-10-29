@@ -251,7 +251,7 @@ const G = {
     v:{ base:{ osc:'sine', vol:-22 },
         bass:{ osc:'square', e:env(.005,.12,.3,.05), vol:-15, p:'..x...x...x...x.' },
         chords:{ osc:'square', e:env(.005,.15,.0,.1), vol:-22, p:'...x.....x..x...' },
-        lead:{ osc:'square', e:env(.002,.06,.1,.05), vol:-26, p:'0123012301230123' },
+        lead:{ osc:'square', e:env(.005,.06,.1,.05), vol:-26, p:'0123012301230123' },
         counter:{ osc:'fattriangle', e:env(.08,.3,.7,1), vol:-22, p:'x---------------' },
         melody:{ osc:'pulse', e:env(.01,.1,.5,.2), vol:-19 },
         sparkle:{ osc:'sine', vol:-27 } },
@@ -265,7 +265,7 @@ const G = {
     v:{ base:{ osc:'triangle', vol:-24 },
         bass:{ osc:'sine', e:env(.005,.6,.6,.3), vol:-8, porta:.04, p:'x-----x---x-----' },
         chords:{ osc:'fmsine', e:env(.01,.6,.3,.8), vol:-20, p:'x-------..x-----' },
-        lead:{ osc:'triangle', e:env(.002,.15,0,.1), vol:-20, p:'..2...1...3...0.' },
+        lead:{ osc:'triangle', e:env(.005,.15,0,.1), vol:-20, p:'..2...1...3...0.' },
         counter:{ osc:'amsine', e:env(.06,.3,.6,1), vol:-24, p:'x---------------' },
         melody:{ osc:'triangle', e:env(.01,.2,.4,.3), vol:-16 },
         sparkle:{ osc:'sine', vol:-28 } },
@@ -278,8 +278,8 @@ const G = {
     names:['BASSO','CHITARRA','SECONDA CHIT.','CORI'],
     v:{ base:{ osc:'triangle', vol:-24 },
         bass:{ osc:'square', e:env(.005,.1,.5,.05), vol:-15, p:'x.x.x.x.x.x.x.x.' },
-        chords:{ osc:'sawtooth', e:env(.003,.1,.6,.05), vol:-22, dist:.8, p:'x.x.x.x.x.x.x.x.' },
-        lead:{ osc:'square', e:env(.003,.08,.4,.05), vol:-25, dist:.5, p:'0.0.1.1.2.2.1.1.' },
+        chords:{ osc:'sawtooth', e:env(.005,.1,.6,.05), vol:-22, dist:.8, p:'x.x.x.x.x.x.x.x.' },
+        lead:{ osc:'square', e:env(.005,.08,.4,.05), vol:-25, dist:.5, p:'0.0.1.1.2.2.1.1.' },
         counter:{ osc:'triangle', e:env(.05,.2,.8,.3), vol:-20, p:'x---x---x---x---' },
         melody:{ osc:'sawtooth', e:env(.01,.1,.7,.1), vol:-18, dist:.4 },
         sparkle:{ osc:'square', vol:-30 } },
@@ -293,7 +293,7 @@ const G = {
     v:{ base:{ osc:'sine', vol:-24 },
         bass:{ osc:'triangle', e:env(.01,.3,.3,.2), vol:-10, p:'w...w...w...w...' },
         chords:{ osc:'fmsine', e:env(.005,.4,.2,.4), vol:-21, p:'...x-.....x-....' },
-        lead:{ osc:'sine', e:env(.002,.5,0,.4), vol:-20, p:'0.2.1.3...2.1...' },
+        lead:{ osc:'sine', e:env(.005,.5,0,.4), vol:-20, p:'0.2.1.3...2.1...' },
         counter:{ osc:'fatsawtooth', e:env(.03,.3,.6,.5), vol:-28, p:'x-------....x---' },
         melody:{ osc:'fmsquare', e:env(.02,.2,.5,.2), vol:-22 },
         sparkle:{ osc:'sine', vol:-28 } },
@@ -306,8 +306,8 @@ const G = {
     names:['BASSO DUB','SKANK','ORGANO BUBBLE','FIATI'],
     v:{ base:{ osc:'sine', vol:-22 },
         bass:{ osc:'sine', e:env(.01,.4,.6,.2), vol:-7, p:'x-----f-x.......' },
-        chords:{ osc:'square', e:env(.002,.08,0,.05), vol:-20, p:'....x.......x...' },
-        lead:{ osc:'triangle', e:env(.002,.06,0,.05), vol:-22, p:'..0.1...2.1.....' },
+        chords:{ osc:'square', e:env(.005,.08,0,.05), vol:-20, p:'....x.......x...' },
+        lead:{ osc:'triangle', e:env(.005,.06,0,.05), vol:-22, p:'..0.1...2.1.....' },
         counter:{ osc:'sawtooth', e:env(.05,.2,.6,.3), vol:-24, p:'x---....x---....' },
         melody:{ osc:'square', e:env(.02,.2,.5,.3), vol:-20 },
         sparkle:{ osc:'sine', vol:-28 } },
@@ -321,7 +321,7 @@ const G = {
     v:{ base:{ osc:'sine', vol:-22 },
         bass:{ osc:'triangle', e:env(.02,.3,.8,.6), vol:-12, p:'x-------x-------' },
         chords:{ osc:'fatsawtooth', e:env(.08,.4,.6,1.4), vol:-27, p:'x---------------' },
-        lead:{ osc:'square', e:env(.001,.12,0,.1), vol:-27, p:'0212021202120212' },
+        lead:{ osc:'square', e:env(.005,.12,0,.1), vol:-27, p:'0212021202120212' },
         counter:{ osc:'fattriangle', e:env(.05,.3,.7,.8), vol:-21, p:'x-------x-------' },
         melody:{ osc:'triangle', e:env(.05,.2,.6,.5), vol:-15 },
         sparkle:{ osc:'sine', vol:-28 } },
@@ -532,16 +532,16 @@ const mid = n => T.Frequency(n, 'midi').toNote();
 function buildMaster() {
   M = {};
   M.limiter = new T.Limiter(-2).toDestination();
-  M.vol = new T.Volume(-4).connect(M.limiter);
-  M.verb = new T.Freeverb({ roomSize:.82, dampening:2600 }).connect(M.vol);
+  M.vol = new T.Volume(-8).connect(M.limiter);
+  M.verb = new T.Reverb({ decay:2.2, preDelay:.01 }).connect(M.vol);
   M.filt = new T.Filter(CUTOFF.ARR, 'lowpass').connect(M.verb);
   M.pump = new T.Gain(1).connect(M.filt);
   M.drive = new T.Distortion(.5).connect(M.pump); M.drive.wet.value = 0;
   M.bus = new T.Gain(1).connect(M.drive);
-  M.crash = new T.NoiseSynth({ noise:{ type:'white' }, envelope:env(.001, 1.6, 0, .4), volume:-14 });
+  M.crash = new T.NoiseSynth({ noise:{ type:'white' }, envelope:env(.005, 1.6, 0, .4), volume:-14 });
   M.crash.connect(new T.Filter(4500, 'highpass').connect(M.vol));
   M.crusher = new T.BitCrusher(3).connect(M.vol);
-  M.glitch = new T.NoiseSynth({ noise:{ type:'pink' }, envelope:env(.001, .04, 0, .01), volume:-8 }).connect(M.crusher);
+  M.glitch = new T.NoiseSynth({ noise:{ type:'pink' }, envelope:env(.005, .04, 0, .01), volume:-8 }).connect(M.crusher);
   M.sting = new T.PolySynth(T.Synth, { oscillator:{ type:'square' }, envelope:env(.005, .2, .3, .6), volume:-14 }).connect(M.verb);
 }
 function voice(spec, poly) {
@@ -569,12 +569,12 @@ function buildVoices() {
   V.counter = voice(g.v.counter, true);
   V.mel = voice(g.v.melody, false);
   V.harm = voice({ ...g.v.melody, vol:g.v.melody.vol - 5 }, false);
-  V.spk = voice({ osc:g.v.sparkle.osc, e:env(.001, .08, 0, .05), vol:g.v.sparkle.vol }, false);
-  V.kick = new T.MembraneSynth({ pitchDecay:.04, octaves:6, envelope:env(.001, k.kick.decay, 0, .1) }); V.kick.volume.value = k.kick.vol; V.kick.connect(M.bus);
+  V.spk = voice({ osc:g.v.sparkle.osc, e:env(.005, .08, 0, .05), vol:g.v.sparkle.vol }, false);
+  V.kick = new T.MembraneSynth({ pitchDecay:.04, octaves:6, envelope:env(.005, k.kick.decay, 0, .1) }); V.kick.volume.value = k.kick.vol; V.kick.connect(M.bus);
   const sf = new T.Filter(k.snare.hp, 'highpass').connect(M.bus);
-  V.snare = new T.NoiseSynth({ noise:{ type:'white' }, envelope:env(.001, k.snare.decay, 0, .05) }); V.snare.volume.value = k.snare.vol; V.snare.connect(sf); V.snare._extra = [sf];
+  V.snare = new T.NoiseSynth({ noise:{ type:'white' }, envelope:env(.005, k.snare.decay, 0, .05) }); V.snare.volume.value = k.snare.vol; V.snare.connect(sf); V.snare._extra = [sf];
   const hf = new T.Filter(7000, 'highpass').connect(M.bus);
-  V.hat = new T.NoiseSynth({ noise:{ type:'white' }, envelope:env(.001, k.hat.decay, 0, .02) }); V.hat.volume.value = k.hat.vol; V.hat.connect(hf); V.hat._extra = [hf];
+  V.hat = new T.NoiseSynth({ noise:{ type:'white' }, envelope:env(.005, k.hat.decay, 0, .02) }); V.hat.volume.value = k.hat.vol; V.hat.connect(hf); V.hat._extra = [hf];
 }
 function hit(v, time, vel) {
   const k = G[live.genre].kit;
@@ -602,7 +602,7 @@ function applyDownbeat(time) {
   if (live.phase !== prevPhase) outroBars = 0; else outroBars++;
   if (live.phase !== prevPhase) {
     M.filt.frequency.rampTo(CUTOFF[live.phase], live.phase === 'LIVE' ? .05 : 1.2, time);
-    M.vol.volume.rampTo(live.phase === 'LIVE' ? -2 : -5, .5, time);
+    M.vol.volume.rampTo(live.phase === 'LIVE' ? -6 : -9, .5, time);
     if (live.phase === 'LIVE') M.crash.triggerAttackRelease('1n', time, .9);
     if (live.phase === 'WIN') stinger(time, true);
     if (live.phase === 'LOSE') stinger(time, false);
@@ -623,9 +623,9 @@ function glitch() {
   const now = T.Transport.nextSubdivision('16n'), d = T.Time('32n').toSeconds();
   for (let i = 0; i < 6; i++) {
     M.glitch.triggerAttackRelease('64n', now + i * d, .9);
-    M.bus.gain.setValueAtTime(i % 2 ? 1 : .08, now + i * d);
+    M.bus.gain.linearRampToValueAtTime(i % 2 ? 1 : .08, now + i * d + .004);
   }
-  M.bus.gain.setValueAtTime(1, now + 6 * d);
+  M.bus.gain.linearRampToValueAtTime(1, now + 6 * d + .004);
 }
 const SWING_SHAPE = { '8n':[0, .333, .667, .333], '16n':[0, .5, 0, .5] };
 function tick(time0) {
@@ -649,7 +649,8 @@ function tick(time0) {
     if (L.hw >= 1 && s % 4 === 0) {
       const depth = [1, .72, .55, .4][Math.min(L.hw, 3)];
       M.pump.gain.cancelScheduledValues(time);
-      M.pump.gain.setValueAtTime(depth, time);
+      M.pump.gain.setValueAtTime(1, time);
+      M.pump.gain.linearRampToValueAtTime(depth, time + .01);
       M.pump.gain.linearRampToValueAtTime(1, time + d16 * 3);
     }
     g.parts.forEach((pt, i) => {
@@ -708,6 +709,7 @@ async function power() {
     $('demo').classList.remove('on'); toast('Impianto spento.'); return;
   }
   try {
+    if (!M) { try { T.setContext(new T.Context({ latencyHint:'playback', lookAhead:.15 })); } catch (e) {} }
     await T.start();
     if (!M) buildMaster();
     live = { ...want };
