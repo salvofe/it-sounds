@@ -10,6 +10,17 @@ type Synth = InstanceType<ToneModule['Synth']>
 type Reverb = InstanceType<ToneModule['Reverb']>
 
 let Tone: ToneModule | null = null
+
+// tone's package.json "browser" field points webpack at the UMD build, which
+// attaches itself to window.Tone and leaves the imported namespace empty
+export async function loadTone(): Promise<ToneModule> {
+  const mod = await import('tone') as ToneModule & { default?: ToneModule }
+  if (typeof mod.start === 'function') return mod
+  const umd = mod.default ?? (globalThis as { Tone?: ToneModule }).Tone
+  if (!umd) throw new Error('Tone.js did not load')
+  return umd
+}
+
 let poly: PolySynth | null = null
 let blip: Synth | null = null
 let reverb: Reverb | null = null
@@ -19,7 +30,10 @@ let muted = false
 async function init(): Promise<void> {
   if (ready || typeof window === 'undefined') return
   try {
-    Tone = await import('tone')
+    Tone = await loadTone()
+    // larger buffer: the backing track (lib/music/player) crackles with the default latency
+    // dispose the context Tone created on load; Tone.Transport stays bound to it, so use getTransport()
+    try { Tone.setContext(new AudioContext({ latencyHint: 'playback' }), true) } catch {}
     await Tone.start()
     poly = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'sawtooth' },
