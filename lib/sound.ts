@@ -20,6 +20,8 @@ async function init(): Promise<void> {
   if (ready || typeof window === 'undefined') return
   try {
     Tone = await import('tone')
+    // larger buffer: the backing track (lib/music/player) crackles with the default latency
+    try { Tone.setContext(new Tone.Context({ latencyHint: 'playback' })) } catch {}
     await Tone.start()
     poly = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'sawtooth' },

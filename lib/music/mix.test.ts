@@ -60,11 +60,11 @@ describe('mixFor', () => {
   it('drops a layer when the card goes back to hand (real engine actions)', () => {
     let g = produce(game(), s => { s.players[0].hand = [T('Small Stage', 900)] })
     const play = applyAction(g, 0, { type: 'play', handIdx: 0, sk: 's1' })
-    expect(play.ok).toBe(true)
+    if (!play.ok) throw new Error(play.error)
     g = play.state
     expect(mixFor(g, 0).drums).toBe(1)
     const back = applyAction(g, 0, { type: 'pickup', sk: 's1', slot: 'stage' })
-    expect(back.ok).toBe(true)
+    if (!back.ok) throw new Error(back.error)
     expect(mixFor(back.state, 0).drums).toBe(0)
   })
 
