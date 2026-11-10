@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "simulate": "tsx scripts/simulate.ts"
+    "simulate": "tsx scripts/simulate.ts",
+    "check:board": "node scripts/board-check.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
     "immer": "^11.1.8",
+    "motion": "12.42.2",
     "next": "^15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

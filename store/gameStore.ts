@@ -6,6 +6,10 @@ import {
   type Action, type GameEvent, type GameState as EngineState, type PlayerId, type Mode, type ShopRules,
 } from '@/lib/engine'
 import { Sound } from '@/lib/sound'
+import { Music } from '@/lib/music/player'
+import { mixFor } from '@/lib/music/mix'
+import { buildSteps, resultsOverlayDelay } from '@/lib/fx/queue'
+import { Fx } from '@/lib/fx/runner'
 
 // The rules live in lib/engine (pure, symmetric, server-ready). This store only
 // holds the engine state, exposes it under the names the components read, and
@@ -26,6 +30,8 @@ function emptyStageState(): StageState {
 function emptyStages(): Record<StageKey, StageState> {
   return { s1: emptyStageState(), s2: emptyStageState(), s3: emptyStageState() }
 }
+
+export interface PreviewAnchor { left: number; top: number; width: number; height: number }
 
 // ── State & Actions types ─────────────────────────────────────────────────────
 
@@ -62,6 +68,8 @@ export interface GameState {
   showPhaseTransition: boolean; phaseTransitionName: string
   cardToast: CardToastData | null; comboReveal: ComboRevealData | null
   soundMuted: boolean
+  drawerOpen: boolean
+  previewCard: { card: Card; owner: 'me' | 'ai'; anchor: PreviewAnchor } | null
 }
 
 export interface GameActions {
@@ -78,9 +86,11 @@ export interface GameActions {
   trashCard(idx: number): void
   startMove(sk: StageKey, sl: StageSlot): void
   tryMoveDrop(sk: StageKey, sl: StageSlot): boolean
+  dropOnStage(sk: StageKey): boolean
   undo(): void; mulligan(): void; closeResults(): void
-  setFocus(sk: StageKey): void; toggleSound(): void
+  setFocus(sk: StageKey): void; toggleSound(): void; toggleDrawer(): void
   addLog(msg: string): void; setCommentary(txt: string): void
+  setPreview(p: GameState['previewCard']): void
   dismissCardToast(): void; dismissComboReveal(): void
 }
 
@@ -88,6 +98,7 @@ export interface GameActions {
 
 const INITIAL: GameState = {
   game: null,
+  previewCard: null,
   isStarted: false, playerGenre: 'Synthwave', playerSubGenre: 'Darksynth', aiGenre: 'Industrial',
   round: 1, phaseIdx: 0,
   playerDeck: [], playerHand: [], playerTrash: [], playerStages: emptyStages(),
@@ -105,6 +116,7 @@ const INITIAL: GameState = {
   showPhaseTransition: false, phaseTransitionName: '',
   cardToast: null, comboReveal: null,
   soundMuted: false,
+  drawerOpen: false,
 }
 
 function project(g: EngineState): Partial<GameState> {
@@ -127,6 +139,10 @@ function project(g: EngineState): Partial<GameState> {
 }
 
 const label = (sk: StageKey) => sk.toUpperCase()
+
+// the results panel waits for the results moment on the table (lib/fx); a new game cancels the wait
+let resultsDelay = 0
+let gameToken = 0
 
 // ── Store ─────────────────────────────────────────────────────────────────────
 
@@ -171,6 +187,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
         break
       case 'attacked': {
         Sound.attack()
+        if (!mine && ev.destroyed.length) Music.glitch()   // the AI broke one of your layers
         const who = mine ? 'Your' : 'AI'
         const whose = mine ? 'AI' : 'your'
         if (ev.blocked === 'shield') log(mine ? `🛡 AI firewall on ${label(ev.sk)} blocked your ${ev.card.name}!` : `🛡 Your firewall on ${label(ev.sk)} blocked the AI's ${ev.card.name}!`)
@@ -204,7 +221,10 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
         break
       case 'results': {
         const [pt, at] = ev.scores
-        set({ showResults: true })
+        if (resultsDelay > 0) {
+          const token = gameToken
+          setTimeout(() => { if (token === gameToken) set({ showResults: true }) }, resultsDelay)
+        } else set({ showResults: true })
         log(`📊 Results — You: ${pt.toFixed(1)}k | AI: ${at.toFixed(1)}k`)
         if (ev.gameOver) { if (ev.winner === ME) Sound.win(); else if (ev.winner === 'draw') Sound.phase('RESULTS'); else Sound.lose() }
         break
@@ -231,11 +251,18 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   }
 
   function commit(g: EngineState, events: GameEvent[]) {
-    set(project(g))
+    const steps = buildSteps(events, ME)
+    resultsDelay = resultsOverlayDelay(steps)
+    Fx.prepare(steps)   // measure and hide before React shows the new state
+    set({ ...project(g), previewCard: null })
     for (const ev of events) handle(ev)
+    Music.apply(mixFor(g, ME))
+    if (g.gameOver) Music.stop(4000)   // let the results stinger play first
+    Fx.run(steps, { me: get().playerGenre, ai: get().aiGenre })
   }
 
   function dispatch(action: Action): boolean {
+    Fx.skip()   // your move ends the AI's animation sequence
     const g = get().game
     if (!g) return false
     const r = applyAction(g, ME, action)
@@ -274,19 +301,29 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     startGame(playerGenre, playerSubGenre, aiGenre, mode) {
-      Sound.unlock()
+      Fx.skip()
+      gameToken++
+      Music.setMuted(get().soundMuted)
+      Music.start()   // unlocks Sound too; idempotent
       const { state } = createGame([
         { name: 'YOU', genre: playerGenre, subGenre: playerSubGenre },
         { name: 'AI', genre: aiGenre },
       ], Date.now(), mode)
       set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: false, showTutorial: false, logEntries: [] })
       set(project(state))
+      Music.apply(mixFor(state, ME))
       log('▶ Game started! Arrangement phase — place your Stages first.')
     },
 
-    restartGame() { set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: true, showTutorial: false }) },
+    restartGame() {
+      Fx.skip()
+      gameToken++
+      Music.stop()
+      set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: true, showTutorial: false })
+    },
 
     nextPhase() {
+      Fx.skip()
       const g = get().game
       if (!g || g.gameOver) return
       const phase = PHASES[g.phaseIdx]
@@ -312,6 +349,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       const { playerHand, phaseIdx, mustDiscard, focusedStage } = get()
       const card = playerHand[idx]
       if (!card) return
+      set({ moveMode: null })
       if (mustDiscard > 0) { dispatch({ type: 'discard', handIdx: idx }); return }
       const phase = PHASES[phaseIdx] as Phase
       if (!isPhaseOk(card.type, phase)) { log(`✖ ${card.name} can't be played in ${phase} phase`); return }
@@ -343,6 +381,8 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
 
     cancelTarget() { set({ targetMode: false, selectedCard: null }) },
 
+    setPreview(p) { set({ previewCard: p }) },
+
     trashCard(idx) { dispatch({ type: 'discard', handIdx: idx }) },
 
     startMove(sk, sl) {
@@ -361,6 +401,18 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       return true
     },
 
+    // board: a stage zone was clicked while a card is being moved → first free slot of the same kind
+    dropOnStage(sk) {
+      const { moveMode, playerStages } = get()
+      if (!moveMode) return false
+      if (sk === moveMode.sk) { set({ moveMode: null }); log('Move cancelled'); return true }
+      const from = moveMode.sl
+      const kind: StageSlot[] = from.startsWith('artist') ? ['artist1', 'artist2', 'artist3']
+        : from.startsWith('track') ? ['track', 'track2', 'track3'] : [from]
+      const slot = kind.find(k => !playerStages[sk][k]) ?? kind[0]
+      return get().tryMoveDrop(sk, slot)
+    },
+
     undo() { dispatch({ type: 'undo' }) },
     mulligan() { dispatch({ type: 'mulligan' }) },
 
@@ -371,10 +423,15 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
 
     setFocus(sk) {
       if (!get().unlockedStages[sk]) return
-      set({ focusedStage: sk }); log(`🎯 Stage ${sk} focused`)
+      set({ focusedStage: sk, moveMode: null }); log(`🎯 Stage ${sk} focused`)
     },
 
-    toggleSound() { set({ soundMuted: Sound.toggle() }) },
+    toggleDrawer() { set(s => ({ drawerOpen: !s.drawerOpen })) },
+    toggleSound() {
+      const m = Sound.toggle()
+      Music.setMuted(m)
+      set({ soundMuted: m })
+    },
 
     addLog: log,
     setCommentary(txt) { set({ commentary: txt }) },

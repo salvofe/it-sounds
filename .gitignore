@@ -18,3 +18,5 @@ npm-debug.log*
 *.tsbuildinfo
 .vercel
 .vercel
+
+.board-check/

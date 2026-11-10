@@ -560,3 +560,32 @@ describe('bot boost decisions', () => {
     expect(playBotPhase(s, 0).actions.some(a => a.type === 'boost')).toBe(false)
   })
 })
+
+describe('events', () => {
+  it('events stay readable after the action (no revoked draft proxies)', () => {
+    let s = setHand(game(), 1, [T('Small Stage', 800), T('Beat Machine', 801)])
+    let r = ok(s, 1, { type: 'play', handIdx: 0, sk: 's1' })
+    const placed = r.events.find(e => e.type === 'placed')
+    expect(placed && placed.type === 'placed' && placed.card.name).toBe('Small Stage')
+    r = ok(r.state, 1, { type: 'pickup', sk: 's1', slot: 'stage' })
+    const ret = r.events.find(e => e.type === 'returned')
+    expect(ret && ret.type === 'returned' && ret.card.name).toBe('Small Stage')
+    expect(() => JSON.stringify(r.events)).not.toThrow()
+
+    s = setHand(game(), 1, [T('Small Stage', 810), T('Beat Machine', 811)])
+    s = ok(s, 1, { type: 'play', handIdx: 0, sk: 's1' }).state
+    s = ok(s, 1, { type: 'play', handIdx: 0, sk: 's1' }).state
+    s = readyBoth(s)
+    s = setHand(s, 1, [T('Valve Pre-Amp', 812)])
+    s = ok(s, 1, { type: 'play', handIdx: 0, sk: 's1' }).state
+    s = readyBoth(s)
+    s = setHand(s, 0, [T('Malware Worm', 900)])
+    const a = ok(s, 0, { type: 'attack', handIdx: 0, target: 's1' })
+    const ev = a.events.find(e => e.type === 'attacked')
+    if (!ev || ev.type !== 'attacked') throw new Error('no attacked event')
+    expect(ev.card.name).toBe('Malware Worm')
+    expect(ev.destroyed.length).toBeGreaterThan(0)
+    for (const d of ev.destroyed) expect(typeof d.card.name).toBe('string')
+    expect(() => JSON.stringify(a.events)).not.toThrow()
+  })
+})
