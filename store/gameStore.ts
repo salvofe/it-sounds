@@ -6,6 +6,8 @@ import {
   type Action, type GameEvent, type GameState as EngineState, type PlayerId, type Mode, type ShopRules,
 } from '@/lib/engine'
 import { Sound } from '@/lib/sound'
+import { Music } from '@/lib/music/player'
+import { mixFor } from '@/lib/music/mix'
 
 // The rules live in lib/engine (pure, symmetric, server-ready). This store only
 // holds the engine state, exposes it under the names the components read, and
@@ -179,6 +181,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
         break
       case 'attacked': {
         Sound.attack()
+        if (!mine && ev.destroyed.length) Music.glitch()   // the AI broke one of your layers
         const who = mine ? 'Your' : 'AI'
         const whose = mine ? 'AI' : 'your'
         if (ev.blocked === 'shield') log(mine ? `🛡 AI firewall on ${label(ev.sk)} blocked your ${ev.card.name}!` : `🛡 Your firewall on ${label(ev.sk)} blocked the AI's ${ev.card.name}!`)
@@ -241,6 +244,8 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   function commit(g: EngineState, events: GameEvent[]) {
     set({ ...project(g), previewCard: null })
     for (const ev of events) handle(ev)
+    Music.apply(mixFor(g, ME))
+    if (g.gameOver) Music.stop(4000)   // let the results stinger play first
   }
 
   function dispatch(action: Action): boolean {
@@ -282,17 +287,22 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     startGame(playerGenre, playerSubGenre, aiGenre, mode) {
-      Sound.unlock()
+      Music.setMuted(get().soundMuted)
+      Music.start()   // unlocks Sound too; idempotent
       const { state } = createGame([
         { name: 'YOU', genre: playerGenre, subGenre: playerSubGenre },
         { name: 'AI', genre: aiGenre },
       ], Date.now(), mode)
       set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: false, showTutorial: false, logEntries: [] })
       set(project(state))
+      Music.apply(mixFor(state, ME))
       log('▶ Game started! Arrangement phase — place your Stages first.')
     },
 
-    restartGame() { set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: true, showTutorial: false }) },
+    restartGame() {
+      Music.stop()
+      set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: true, showTutorial: false })
+    },
 
     nextPhase() {
       const g = get().game
@@ -398,7 +408,11 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     },
 
     toggleDrawer() { set(s => ({ drawerOpen: !s.drawerOpen })) },
-    toggleSound() { set({ soundMuted: Sound.toggle() }) },
+    toggleSound() {
+      const m = Sound.toggle()
+      Music.setMuted(m)
+      set({ soundMuted: m })
+    },
 
     addLog: log,
     setCommentary(txt) { set({ commentary: txt }) },

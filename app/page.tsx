@@ -8,6 +8,7 @@ import PhaseTransition from '@/components/overlays/PhaseTransition'
 import CardToast from '@/components/overlays/CardToast'
 import ComboReveal from '@/components/overlays/ComboReveal'
 import Board from '@/components/board/Board'
+import { Music } from '@/lib/music/player'
 
 export default function GamePage() {
   const { isStarted, targetMode } = useGameStore()
@@ -16,6 +17,7 @@ export default function GamePage() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has('e2e')) {
       (window as unknown as { __itsounds?: typeof useGameStore }).__itsounds = useGameStore
+      ;(window as unknown as { __itsoundsMusic?: typeof Music }).__itsoundsMusic = Music
     }
   }, [])
 
