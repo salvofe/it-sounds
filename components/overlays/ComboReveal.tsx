@@ -26,16 +26,16 @@ export default function ComboReveal() {
         textAlign: 'center',
         boxShadow: '0 0 40px rgba(255,238,0,0.5)',
       }}>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 8, color: 'var(--cyan)', letterSpacing: 2, marginBottom: 10 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 12, color: 'var(--cyan)', letterSpacing: 2, marginBottom: 10 }}>
           {isNew ? '⚡ COMBO DISCOVERED!' : '⚡ COMBO ACTIVE'}
         </div>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 18, color: 'var(--yel)', letterSpacing: 3, textShadow: '0 0 16px var(--yel)', marginBottom: 8 }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 24, color: 'var(--yel)', letterSpacing: 3, textShadow: '0 0 16px var(--yel)', marginBottom: 8 }}>
           {combo.name}
         </div>
-        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: 'var(--grn)', textShadow: '0 0 10px var(--grn)' }}>
+        <div style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 16, color: 'var(--grn)', textShadow: '0 0 10px var(--grn)' }}>
           {fx}
         </div>
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>{combo.desc}</div>
+        <div style={{ fontSize: 16, color: 'var(--muted)', marginTop: 6 }}>{combo.desc}</div>
       </div>
     </div>
   )

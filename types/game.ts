@@ -12,6 +12,9 @@ export type CardType =
   | 'viral'
   | 'draw'
 
+// what an attack card destroys on the target stage
+export type AttackEffect = 'hardware' | 'track' | 'artist' | 'emp'
+
 export interface Card {
   id: number
   type: CardType
@@ -31,6 +34,7 @@ export interface Card {
   multiplier?: number
   // attack
   attackPower?: number
+  effect?: AttackEffect
   // defense
   decoy?: boolean
   // sponsor
@@ -64,6 +68,11 @@ export interface StageState {
   protected: boolean
   decoy: boolean
   combos: Combo[]
+  // Short mode, reset every round
+  boost: number         // flat fans added on top of the stage score
+  thresholdCut: number  // fans removed from the stage threshold
+  multBonus: number     // added to the hardware multiplier (or to 1 without hardware)
+  upgraded: boolean     // one upgrade per stage per round
 }
 
 // ── Genres ───────────────────────────────────────────────────────────────────
@@ -83,14 +92,6 @@ export interface Combo {
   bonus: number
   mult: number
 }
-
-// ── History (undo) ───────────────────────────────────────────────────────────
-
-export type HistoryEntry =
-  | { type: 'place'; sk: StageKey; slot: StageSlot; card: Card; hi: number; ow: number; replaced?: Card | null }
-  | { type: 'def'; sk: StageKey; card: Card; hi: number; op: boolean; odecoy: boolean }
-  | { type: 'atk'; hi: number; card: Card; tk: StageKey; snap: StageState }
-  | { type: 'sponsor'; ow: number; i: number; card: Card }
 
 // ── Move Mode ────────────────────────────────────────────────────────────────
 
