@@ -271,21 +271,10 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     return true
   }
 
-  async function aiCommentary(ctx: string) {
-    const { playerStages, aiStages } = get()
-    const board = (st: Record<StageKey, StageState>) => (['s1', 's2', 's3'] as StageKey[])
-      .map(k => `${k}:${st[k].current.toFixed(1)}k${st[k].protected ? ' shielded' : ''}`).join(', ')
-    try {
-      const res = await fetch('/api/commentary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ctx, playerBoard: board(playerStages), aiBoard: board(aiStages) }),
-      })
-      const data = await res.json() as { text?: string }
-      set({ commentary: `"${data.text ?? 'Analyzing frequencies...'}"` })
-    } catch {
-      set({ commentary: '"My algorithms are running hot. Your crowd is already mine."' })
-    }
+  // The game is a static site (Buddy Games Studio), so there is no server to generate live
+  // commentary: the AI always uses its canned line, as the public build already did.
+  function aiCommentary(_ctx: string) {
+    set({ commentary: '"My algorithms are running hot. Your crowd is already mine."' })
   }
 
   // ── Public store ───────────────────────────────────────────────────────────

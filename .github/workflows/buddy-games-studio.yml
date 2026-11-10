@@ -1,0 +1,21 @@
+# Rebuilds the Buddy Games Studio site (where this game is published) on every push.
+# Needs the repo secret BUDDY_GAMES_DEPLOY_HOOK (a Vercel deploy hook of the site);
+# without it the job does nothing.
+name: Publish on Buddy Games Studio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the site build
+        env:
+          HOOK: ${{ secrets.BUDDY_GAMES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "BUDDY_GAMES_DEPLOY_HOOK not set, skipping"; exit 0; fi
+          curl -fsS -X POST "$HOOK" > /dev/null
+          echo "Site rebuild requested"
