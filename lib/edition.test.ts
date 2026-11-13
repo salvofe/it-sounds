@@ -55,7 +55,7 @@ describe('ownership', () => {
   it('asks /api/io on the same origin with credentials', async () => {
     const f = vi.fn(async () => new Response(JSON.stringify({ signedIn: true, games: ['it-sounds'] }), { status: 200 }))
     await expect(askOwnership(f)).resolves.toBe(true)
-    expect(f).toHaveBeenCalledWith('/api/io', { credentials: 'include' })
+    expect(f).toHaveBeenCalledWith('/api/io', { credentials: 'include', cache: 'no-store' })
   })
   it('any failure is a no', async () => {
     await expect(askOwnership(async () => { throw new Error('offline') })).resolves.toBe(false)

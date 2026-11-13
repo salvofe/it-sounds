@@ -43,7 +43,7 @@ type Fetch = (url: string, init: RequestInit) => Promise<Response>
 /** Asks the site (same origin, with its cookies) whether the visitor owns the full game. Any failure is a no. */
 export async function askOwnership(fetchImpl: Fetch): Promise<boolean> {
   try {
-    const r = await fetchImpl('/api/io', { credentials: 'include' })
+    const r = await fetchImpl('/api/io', { credentials: 'include', cache: 'no-store' })
     return r.ok && ownsFullGame(await r.json())
   } catch {
     return false
