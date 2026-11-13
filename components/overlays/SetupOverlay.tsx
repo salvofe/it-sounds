@@ -3,6 +3,10 @@ import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
 import { SUBS } from '@/lib/data'
 import type { Mode } from '@/lib/engine'
+import { EDITION } from '@/lib/edition'
+import { DemoBadge, FullGameLink } from './DemoUpsell'
+
+const DEMO = EDITION === 'demo'
 
 const PLAYER_GENRES = ['Synthwave', 'Rock', 'Electronica', 'Hip-Hop', 'Punk', 'Jazz', 'Reggae', 'Classical']
 const AI_GENRES = ['Industrial', 'Electronica', 'Jazz-Fusion', 'Metal', 'Punk-AI', 'Drone', 'Trap-AI']
@@ -24,14 +28,14 @@ export default function SetupOverlay() {
   }
 
   function handleStart() {
-    startGame(pGenre, pSub, aiGenre, mode)
+    startGame(pGenre, pSub, aiGenre, DEMO ? 'short' : mode)
   }
 
   function handleRandom() {
     const pg = PLAYER_GENRES[Math.floor(Math.random() * PLAYER_GENRES.length)]
     const sg = SUBS[pg]?.[0] ?? ''
     const ag = AI_GENRES[Math.floor(Math.random() * AI_GENRES.length)]
-    startGame(pg, sg, ag, mode)
+    startGame(pg, sg, ag, DEMO ? 'short' : mode)
   }
 
   const sel: React.CSSProperties = {
@@ -43,17 +47,25 @@ export default function SetupOverlay() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 8000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(4,4,12,0.97)' }}>
-      <div style={{ background: 'var(--panel)', border: '3px solid var(--cyan)', padding: 28, width: 480, position: 'relative' }}>
+      <div data-testid="setup" style={{ background: 'var(--panel)', border: '3px solid var(--cyan)', padding: 28, width: 'min(480px, calc(100vw - 32px))', boxSizing: 'border-box', maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto', position: 'relative' }}>
         <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', textAlign: 'center', fontSize: 14, letterSpacing: 2, textShadow: '0 0 10px var(--yel)', marginBottom: 20 }}>
-          ◀ DECK CONFIG ▶
+          ◀ DECK CONFIG ▶{DEMO && <DemoBadge />}
         </div>
 
         <div style={{ marginBottom: 14 }}>
           <label htmlFor="mode" style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', display: 'block', marginBottom: 8, fontSize: 11 }}>▶ MODE</label>
-          <select id="mode" style={{ ...sel, border: '2px solid var(--yel)' }} value={mode} onChange={e => setMode(e.target.value as Mode)}>
+          <select id="mode" data-testid="mode-select" style={{ ...sel, border: '2px solid var(--yel)' }} value={mode} onChange={e => setMode(e.target.value as Mode)}>
             <option value="short">Short — best of 5 rounds</option>
-            <option value="classic">Classic — first to 20k in one round</option>
+            {DEMO
+              ? <option value="classic" disabled>🔒 Classic — full game only</option>
+              : <option value="classic">Classic — first to 20k in one round</option>}
           </select>
+          {DEMO && (
+            <div className="demo-locked" data-testid="classic-locked">
+              <div style={{ marginBottom: 8 }}>🔒 Classic — first to 20k fans in one round — is in the full game.</div>
+              <FullGameLink />
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: 14 }}>
@@ -77,7 +89,7 @@ export default function SetupOverlay() {
           </select>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
           <button className="btn btn-g" style={{ flex: 1 }} onClick={handleStart}>▶ INITIALIZE</button>
           <button className="btn btn-x" onClick={handleRandom}>RANDOM</button>
           <button className="btn btn-x" onClick={showTut}>? HELP</button>

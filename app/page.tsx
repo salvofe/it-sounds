@@ -10,9 +10,13 @@ import ComboReveal from '@/components/overlays/ComboReveal'
 import Board from '@/components/board/Board'
 import { Music } from '@/lib/music/player'
 import { Fx } from '@/lib/fx/runner'
+import { checkOwnership } from '@/store/ownership'
 
 export default function GamePage() {
   const { isStarted, targetMode } = useGameStore()
+
+  // demo edition only: does the visitor own the full game? (the full edition never asks)
+  useEffect(() => { checkOwnership() }, [])
 
   // test hook: board-check.mjs drives the store through window.__itsounds (only with ?e2e=1)
   useEffect(() => {

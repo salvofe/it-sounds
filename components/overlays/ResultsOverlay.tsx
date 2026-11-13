@@ -1,6 +1,8 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
 import { RULES } from '@/lib/engine'
+import { EDITION } from '@/lib/edition'
+import { DemoEndBox } from './DemoUpsell'
 
 export default function ResultsOverlay() {
   const { showResults, playerBestRound, aiBestRound, gameOver, closeResults, restartGame, mode, roundWins, lastRoundWinner, winner, playerRoundScore, aiRoundScore } = useGameStore()
@@ -32,7 +34,7 @@ export default function ResultsOverlay() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,0,8,0.94)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: 'var(--panel)', border: '3px solid var(--yel)', padding: 28, width: 400, textAlign: 'center', position: 'relative' }}>
+      <div data-testid="results" style={{ background: 'var(--panel)', border: '3px solid var(--yel)', padding: 28, width: 'min(400px, calc(100vw - 32px))', boxSizing: 'border-box', maxHeight: 'calc(100dvh - 32px)', overflowY: 'auto', textAlign: 'center', position: 'relative' }}>
         <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', fontSize: 16, marginBottom: 14, textShadow: '0 0 10px var(--yel)' }}>
           {title}
         </div>
@@ -49,6 +51,8 @@ export default function ResultsOverlay() {
         </div>
 
         <div style={{ fontSize: 20, color: 'var(--muted)', marginBottom: 14, lineHeight: 1.5 }}>{msg}</div>
+
+        {gameOver && EDITION === 'demo' && <DemoEndBox />}
 
         {gameOver ? (
           <button className="btn btn-y" style={{ width: '100%' }} onClick={restartGame}>▶ PLAY AGAIN</button>

@@ -10,6 +10,7 @@ import { Music } from '@/lib/music/player'
 import { mixFor } from '@/lib/music/mix'
 import { buildSteps, resultsOverlayDelay } from '@/lib/fx/queue'
 import { Fx } from '@/lib/fx/runner'
+import { EDITION, playableMode } from '@/lib/edition'
 
 // The rules live in lib/engine (pure, symmetric, server-ready). This store only
 // holds the engine state, exposes it under the names the components read, and
@@ -140,6 +141,9 @@ function project(g: EngineState): Partial<GameState> {
 
 const label = (sk: StageKey) => sk.toUpperCase()
 
+// The demo edition plays only Short: a state in another mode (however it got in) is never advanced.
+const playable = (g: EngineState | null): g is EngineState => !!g && playableMode(g.mode, EDITION) === g.mode
+
 // the results panel waits for the results moment on the table (lib/fx); a new game cancels the wait
 let resultsDelay = 0
 let gameToken = 0
@@ -264,7 +268,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
   function dispatch(action: Action): boolean {
     Fx.skip()   // your move ends the AI's animation sequence
     const g = get().game
-    if (!g) return false
+    if (!playable(g)) return false
     const r = applyAction(g, ME, action)
     if (!r.ok) { log(`✖ ${r.error}`); return false }
     commit(r.state, r.events)
@@ -297,7 +301,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
       const { state } = createGame([
         { name: 'YOU', genre: playerGenre, subGenre: playerSubGenre },
         { name: 'AI', genre: aiGenre },
-      ], Date.now(), mode)
+      ], Date.now(), playableMode(mode, EDITION))
       set({ ...INITIAL, discovered: get().discovered, soundMuted: get().soundMuted, showSetup: false, showTutorial: false, logEntries: [] })
       set(project(state))
       Music.apply(mixFor(state, ME))
@@ -314,7 +318,7 @@ export const useGameStore = create<GameState & GameActions>()((set, get) => {
     nextPhase() {
       Fx.skip()
       const g = get().game
-      if (!g || g.gameOver) return
+      if (!playable(g) || g.gameOver) return
       const phase = PHASES[g.phaseIdx]
       const r = applyAction(g, ME, { type: 'ready' })
       if (!r.ok) { log(`✖ ${r.error}`); return }

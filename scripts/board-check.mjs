@@ -1,10 +1,12 @@
-// Board checks: starts `next start`, drives headless Chrome over the DevTools protocol,
-// runs one check per player action and layout requirement, saves screenshots.
-// Usage: npx next build && npm run check:board [-- --only=C1,C2]
+// Board checks: serves the static export (out/) under its base path, drives headless Chrome over
+// the DevTools protocol, runs one check per player action and layout requirement, saves screenshots.
+// Usage: npm run build && npm run check:board [-- --only=C1,C2]
+// (the full edition: the checks start Classic games; BASE_PATH must match the build, default /it-sounds)
 import { spawn, execSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { extname, join, normalize } from 'node:path'
 
 const only = (process.argv.find(a => a.startsWith('--only='))?.slice(7) ?? '').split(',').filter(Boolean)
 const PORT = 3030
@@ -16,7 +18,22 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 const killTree = p => { try { if (process.platform === 'win32') execSync(`taskkill /pid ${p.pid} /T /F`, { stdio: 'ignore' }); else p.kill('SIGTERM') } catch {} }
 
 // ── server and browser ──────────────────────────────────────────────────────
-const URL = `http://localhost:${PORT}/?e2e=1`
+const BASE = process.env.BASE_PATH || '/it-sounds'
+const URL = `http://localhost:${PORT}${BASE}/?e2e=1`
+const OUT_DIR = join(process.cwd(), 'out')
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.woff2': 'font/woff2' }
+// the site serves out/ under BASE, so this does too (trailingSlash: a folder answers with its index.html)
+function serveOut() {
+  return createServer((req, res) => {
+    const path = decodeURIComponent(new globalThis.URL(req.url, 'http://x').pathname)
+    if (!path.startsWith(BASE + '/')) { res.writeHead(404).end(); return }
+    let file = normalize(join(OUT_DIR, path.slice(BASE.length)))
+    if (!file.startsWith(OUT_DIR)) { res.writeHead(403).end(); return }
+    if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html')
+    if (!existsSync(file)) { res.writeHead(404).end(); return }
+    res.writeHead(200, { 'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file))
+  }).listen(PORT)
+}
 let server = null, chrome = null, ws = null, profile = null
 let msgId = 0
 const pending = new Map()
@@ -44,7 +61,7 @@ async function shot(name) {
 function cleanup() {
   try { ws?.close() } catch {}
   if (chrome) killTree(chrome)
-  if (server) killTree(server)
+  if (server) { server.closeAllConnections(); server.close() }
   if (profile) { try { rmSync(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 }) } catch {} }
 }
 const watchdog = setTimeout(() => { console.error('watchdog: 10 min exceeded'); cleanup(); process.exit(2) }, 10 * 60 * 1000)
@@ -421,10 +438,11 @@ try {
   let stale = false
   try { await fetch(`http://localhost:${PORT}/`); stale = true } catch {}
   if (stale) throw new Error(`port ${PORT} already answers (stale server?); stop it first`)
-  server = spawn('npx', ['next', 'start', '-p', String(PORT)], { shell: true, stdio: 'ignore' })
+  if (!existsSync(join(OUT_DIR, 'index.html'))) throw new Error('out/index.html missing (run npm run build first)')
+  server = serveOut()
   let up = false
   for (let i = 0; i < 60 && !up; i++) { try { up = (await fetch(URL)).ok } catch {} if (!up) await sleep(500) }
-  if (!up) throw new Error('next start did not come up (did you run next build?)')
+  if (!up) throw new Error(`the static server did not answer at ${URL}`)
 
   profile = mkdtempSync(join(tmpdir(), 'board-check-'))
   chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${CDP_PORT}`, '--hide-scrollbars', '--autoplay-policy=no-user-gesture-required', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' })

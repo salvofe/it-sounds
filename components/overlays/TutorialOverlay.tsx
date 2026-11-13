@@ -1,6 +1,8 @@
 'use client'
 import { useGameStore } from '@/store/gameStore'
 import { RULES } from '@/lib/engine'
+import { EDITION } from '@/lib/edition'
+import { DemoBadge } from './DemoUpsell'
 
 const shortWin = RULES.short.win
 const SHORT_WINS = shortWin.kind === 'bestOf' ? shortWin.wins : 3
@@ -117,7 +119,7 @@ export default function TutorialOverlay() {
       <div style={{ background: 'var(--panel)', border: '3px solid var(--yel)', padding: 28, width: 680, maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
         {/* title */}
         <div style={{ fontFamily: "'Press Start 2P',monospace", color: 'var(--yel)', textAlign: 'center', fontSize: 14, letterSpacing: 2, textShadow: '0 0 10px var(--yel)', marginBottom: 20 }}>
-          ◀ HOW TO PLAY ▶
+          ◀ HOW TO PLAY ▶{EDITION === 'demo' && <DemoBadge />}
         </div>
 
         {/* step title */}
