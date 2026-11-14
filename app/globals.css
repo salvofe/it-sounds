@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&family=Bungee&family=Space+Mono:wght@400;700&family=Rubik+Mono+One&family=Permanent+Marker&family=Archivo:wght@500;800&display=swap');
+@import './fonts.css'; /* self-hosted, see fonts.css */
 
 /* ── Design tokens ──────────────────────────────────────────────────────────── */
 :root {
